@@ -64,6 +64,13 @@ Game::Game()
 	//ImGui::StyleColorsLight();
 	//ImGui::StyleColorsClassic();
 
+	backgroundColor[0] = 0.4f;
+	backgroundColor[1] = 0.6f;
+	backgroundColor[2] = 0.75f;
+	backgroundColor[3] = 1.0f;
+	demoVisible = true;
+	rainbowMode = false;
+	rainbowSpeed = 1.0f;
 }
 
 
@@ -260,7 +267,10 @@ void Game::NewFrame(float deltaTime)
 	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
 	Input::SetMouseCapture(io.WantCaptureMouse);
 	// Show the demo window
-	ImGui::ShowDemoWindow();
+	if(demoVisible)
+	{
+		ImGui::ShowDemoWindow();
+	}
 }
 
 
@@ -280,6 +290,39 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	NewFrame(deltaTime);
+
+	// Custom windows
+	ImGui::Begin("Details");
+	if(ImGui::CollapsingHeader("App Details"))
+	{
+		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
+		ImGui::Text("Window Size: %d x %d", Window::Width(), Window::Height());
+	}
+	if(ImGui::CollapsingHeader("Customization"))
+	{
+		ImGui::Checkbox("Rainbow Mode", &rainbowMode);
+		if (rainbowMode) 
+		{
+			backgroundColor[0] += deltaTime/2 * rainbowSpeed;
+			backgroundColor[1] += deltaTime/3 * rainbowSpeed;
+			backgroundColor[2] += deltaTime/4 * rainbowSpeed;
+			if (backgroundColor[0] > 1.0f) backgroundColor[0] = 0.0f;
+			if (backgroundColor[1] > 1.0f) backgroundColor[1] = 0.0f;
+			if (backgroundColor[2] > 1.0f) backgroundColor[2] = 0.0f;
+			ImGui::SliderFloat("Rainbow Speed", &rainbowSpeed, 0.1f, 5.0f);
+		}
+		else
+		{
+			ImGui::ColorEdit4("Background Color", backgroundColor);
+		}
+	}
+	if (ImGui::Button("Toggle Demo Window"))
+	{
+		demoVisible = !demoVisible;
+	}
+
+	ImGui::End();
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -296,8 +339,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 

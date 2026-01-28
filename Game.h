@@ -37,5 +37,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+
+	// User controls
+	float backgroundColor[4];
+	bool demoVisible;
+	bool rainbowMode;
+	float rainbowSpeed;
 };
 
