@@ -2,6 +2,8 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "Graphics.h"
+#include "Mesh.h"
 
 class Game
 {
@@ -43,5 +45,8 @@ private:
 	bool demoVisible;
 	bool rainbowMode;
 	float rainbowSpeed;
+
+	Mesh boxMesh;
+	Mesh customMesh;
 };
 

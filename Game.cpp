@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Vertex.h"
 #include "Input.h"
+#include "Mesh.h"
 #include "PathHelpers.h"
 #include "Window.h"
 
@@ -250,6 +251,31 @@ void Game::CreateGeometry()
 		// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
 		Graphics::Device->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
 	}
+
+	//Custom Meshes
+	{
+		int boxIndices[] = { 0,1,2, 2,3,0 };
+
+		Vertex boxVertices[] = {
+			{ XMFLOAT3(-0.8f, +0.8f, 0.f), red },
+			{ XMFLOAT3(-0.5f, +0.8f, 0.f), green },
+			{ XMFLOAT3(-0.5f, +0.6f, 0.f), blue },
+			{ XMFLOAT3(-0.8f, +0.6f, 0.f), red },
+		};
+		boxMesh = Mesh(6, boxIndices, 4, boxVertices);
+
+		int meshIndices[] = { 0,1,3, 1,2,3, 0,3,5, 3,4,5 };
+		Vertex meshVertices[] = {
+			{ XMFLOAT3(+0.7, +0.7, 0.f), blue},
+			{ XMFLOAT3(+0.75, +0.8, 0.f), red},
+			{ XMFLOAT3(+0.8, +0.7, 0.f), green},
+			{ XMFLOAT3(+0.9, +0.75, 0.f), blue},
+			{ XMFLOAT3(+0.9, +0.75, 0.f), red},
+			{ XMFLOAT3(+0.75, +0.6, 0.f), green},
+			{ XMFLOAT3(+0.8, +0.65, 0.f), green}
+		};
+		customMesh = Mesh(12, meshIndices, 6, meshVertices);
+	}
 }
 
 void Game::NewFrame(float deltaTime)
@@ -297,6 +323,15 @@ void Game::Update(float deltaTime, float totalTime)
 	{
 		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
 		ImGui::Text("Window Size: %d x %d", Window::Width(), Window::Height());
+	}
+	if (ImGui::CollapsingHeader("Meshes"))
+	{
+		if (ImGui::CollapsingHeader("Mesh: Quad"))
+		{
+			ImGui::Text("Triangles: %d", boxMesh.GetTriangleCount());
+			ImGui::Text("Vertices: %d", boxMesh.GetVertexCount());
+			ImGui::Text("Indices: %d", boxMesh.GetIndexCount());
+		}
 	}
 	if(ImGui::CollapsingHeader("Customization"))
 	{
@@ -368,6 +403,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}
+
+	boxMesh.Draw();
+	customMesh.Draw();
 
 	// ImGui Render
 	{
