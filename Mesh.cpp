@@ -1,6 +1,7 @@
 #include "Mesh.h"
 #include <memory>
-Mesh::Mesh(int indexCount, int* indices, int vertexCount, Vertex* vertices)
+
+Mesh::Mesh(unsigned int indexCount, unsigned int* indices, unsigned int vertexCount, Vertex* vertices)
 {
 	this->indexCount = indexCount;
 	this->vertexCount = vertexCount;

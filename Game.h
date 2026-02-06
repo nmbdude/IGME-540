@@ -4,6 +4,8 @@
 #include <wrl/client.h>
 #include "Graphics.h"
 #include "Mesh.h"
+#include <memory>
+#include <vector>
 
 class Game
 {
@@ -31,14 +33,12 @@ private:
 	//     Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
-	// Buffers to hold actual geometry data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
-
 	// Shaders and shader-related constructs
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 
 	// User controls
 	float backgroundColor[4];
@@ -46,7 +46,10 @@ private:
 	bool rainbowMode;
 	float rainbowSpeed;
 
-	Mesh boxMesh;
-	Mesh customMesh;
+	std::vector<std::shared_ptr<Mesh>> meshList;
+
+	std::shared_ptr<Mesh> triangleMesh;
+	std::shared_ptr<Mesh> quadMesh;
+	std::shared_ptr<Mesh> spaceshipMesh;
 };
 

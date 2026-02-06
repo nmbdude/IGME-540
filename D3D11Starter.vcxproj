@@ -185,6 +185,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PathHelpers.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="BufferStructs.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
