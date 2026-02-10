@@ -141,7 +141,7 @@ void Game::LoadShaders()
 		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 		Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
 
-		
+		vsData = VertexShaderData();
 	}
 
 	// Create an input layout 
@@ -311,6 +311,21 @@ void Game::Update(float deltaTime, float totalTime)
 
 	ImGui::End();
 
+
+
+	vsData.colorTint = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
+
+	XMMATRIX trMat = XMMatrixTranslation((float)sin(totalTime), 0, 0);
+
+	float scale = sin(totalTime * 3.0f) * 0.5f + 1.0f;
+	XMMATRIX scMat = XMMatrixScaling(scale, scale, scale);
+
+	XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(0, 0, totalTime);
+
+	XMMATRIX worldMatrix = trMat * scMat * rotMat;
+
+	XMStoreFloat4x4(&vsData.matrix, worldMatrix);
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -331,12 +346,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	VertexShaderData vsData;
-	vsData.colorTint = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
-	vsData.offset = XMFLOAT3(0.25f, 0.0f, 0.0f);
+	
+
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-
 
 	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));

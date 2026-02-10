@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "Graphics.h"
+#include "BufferStructs.h"
 #include "Mesh.h"
 #include <memory>
 #include <vector>
@@ -47,6 +48,8 @@ private:
 	float rainbowSpeed;
 
 	std::vector<std::shared_ptr<Mesh>> meshList;
+
+	VertexShaderData vsData;
 
 	std::shared_ptr<Mesh> triangleMesh;
 	std::shared_ptr<Mesh> quadMesh;
