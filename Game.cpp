@@ -142,6 +142,8 @@ void Game::LoadShaders()
 		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 		Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
+
+		
 	}
 
 	// Create an input layout 
@@ -316,13 +318,6 @@ void Game::Update(float deltaTime, float totalTime)
 
 	ImGui::End();
 
-
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	Graphics::Context->Unmap(constantBuffer.Get(), 0);
-
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -343,10 +338,19 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	
-	vsData.colorTint = shaderData.colorTint;
-	vsData.offset = shaderData.offset;
-	
+	VertexShaderData vsData;
+	vsData.colorTint = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
+	vsData.offset = XMFLOAT3(0.25f, 0.0f, 0.0f);
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+
+
+	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
+	Graphics::Context->Unmap(constantBuffer.Get(), 0);
+	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
+	Graphics::Context->Unmap(constantBuffer.Get(), 0);
 	for(std::shared_ptr<Mesh> mesh : meshList)
 	{
 		mesh->Draw();
