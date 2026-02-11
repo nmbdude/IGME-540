@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 #include "Graphics.h"
 #include "Mesh.h"
+#include "BufferStructs.h"
 #include <memory>
 #include <vector>
 
@@ -45,6 +46,11 @@ private:
 	bool demoVisible;
 	bool rainbowMode;
 	float rainbowSpeed;
+
+	VertexShaderData vsData;
+
+	VertexShaderData shaderData;
+
 
 	std::vector<std::shared_ptr<Mesh>> meshList;
 

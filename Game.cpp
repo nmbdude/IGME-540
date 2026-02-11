@@ -71,6 +71,8 @@ Game::Game()
 	demoVisible = true;
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
+	shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
+	shaderData.offset = XMFLOAT3{};
 }
 
 
@@ -140,8 +142,6 @@ void Game::LoadShaders()
 		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 		Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
-
-		
 	}
 
 	// Create an input layout 
@@ -171,7 +171,10 @@ void Game::LoadShaders()
 			inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
 
-
+	Graphics::Context->VSSetConstantBuffers(
+		0, // Which slot (register) to bind the buffer to?
+		1, // How many are we setting right now?
+		constantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 }
 
 
@@ -269,21 +272,21 @@ void Game::Update(float deltaTime, float totalTime)
 	{
 		if (ImGui::CollapsingHeader("Mesh: Triangle"))
 		{
-			ImGui::Text("Triangles: %d", triangleMesh.get()->GetTriangleCount());
-			ImGui::Text("Vertices: %d", triangleMesh.get()->GetVertexCount());
-			ImGui::Text("Indices: %d", triangleMesh.get()->GetIndexCount());
+			ImGui::Text("Triangles: %d", triangleMesh->GetTriangleCount());
+			ImGui::Text("Vertices: %d", triangleMesh->GetVertexCount());
+			ImGui::Text("Indices: %d", triangleMesh->GetIndexCount());
 		}
 		if (ImGui::CollapsingHeader("Mesh: Quad"))
 		{
-			ImGui::Text("Triangles: %d", quadMesh.get()->GetTriangleCount());
-			ImGui::Text("Vertices: %d", quadMesh.get()->GetVertexCount());
-			ImGui::Text("Indices: %d", quadMesh.get()->GetIndexCount());
+			ImGui::Text("Triangles: %d", quadMesh->GetTriangleCount());
+			ImGui::Text("Vertices: %d", quadMesh->GetVertexCount());
+			ImGui::Text("Indices: %d", quadMesh->GetIndexCount());
 		}
 		if (ImGui::CollapsingHeader("Mesh: Spaceship"))
 		{
-			ImGui::Text("Triangles: %d", spaceshipMesh.get()->GetTriangleCount());
-			ImGui::Text("Vertices: %d", spaceshipMesh.get()->GetVertexCount());
-			ImGui::Text("Indices: %d", spaceshipMesh.get()->GetIndexCount());
+			ImGui::Text("Triangles: %d", spaceshipMesh->GetTriangleCount());
+			ImGui::Text("Vertices: %d", spaceshipMesh->GetVertexCount());
+			ImGui::Text("Indices: %d", spaceshipMesh->GetIndexCount());
 		}
 	}
 	if(ImGui::CollapsingHeader("Customization"))
@@ -303,6 +306,8 @@ void Game::Update(float deltaTime, float totalTime)
 		{
 			ImGui::ColorEdit4("Background Color", backgroundColor);
 		}
+		ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
+		ImGui::DragFloat3("Offset", (float*)&shaderData.offset, 0.1f);
 	}
 	if (ImGui::Button("Toggle Demo Window"))
 	{
@@ -310,6 +315,13 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	ImGui::End();
+
+
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
+	Graphics::Context->Unmap(constantBuffer.Get(), 0);
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -331,22 +343,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	VertexShaderData vsData;
-	vsData.colorTint = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
-	vsData.offset = XMFLOAT3(0.25f, 0.0f, 0.0f);
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-
-
-	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	Graphics::Context->Unmap(constantBuffer.Get(), 0);
+	
+	vsData.colorTint = shaderData.colorTint;
+	vsData.offset = shaderData.offset;
+	
 	for(std::shared_ptr<Mesh> mesh : meshList)
 	{
-		Graphics::Context->VSSetConstantBuffers(
-			0, // Which slot (register) to bind the buffer to?
-			1, // How many are we setting right now?
-			constantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 		mesh->Draw();
 	}
 
