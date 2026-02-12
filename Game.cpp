@@ -72,7 +72,6 @@ Game::Game()
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
 	shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
-	shaderData.offset = XMFLOAT3{};
 }
 
 
@@ -219,8 +218,6 @@ void Game::CreateGeometry()
 		meshList.push_back(triangleMesh);
 		meshList.push_back(quadMesh);
 		meshList.push_back(spaceshipMesh);
-		
-
 	}
 }
 
@@ -309,7 +306,7 @@ void Game::Update(float deltaTime, float totalTime)
 			ImGui::ColorEdit4("Background Color", backgroundColor);
 		}
 		ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
-		ImGui::DragFloat3("Offset", (float*)&shaderData.offset, 0.1f);
+		//ImGui::DragFloat3("Offset", (float*)&shaderData.matrix, 0.1f);
 	}
 	if (ImGui::Button("Toggle Demo Window"))
 	{
@@ -321,6 +318,10 @@ void Game::Update(float deltaTime, float totalTime)
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
+
+	
+	//if (Input::KeyDown('W'))
+	transform.SetPosition(sinf(totalTime), 0, 0);
 }
 
 
@@ -337,17 +338,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+	
+	vsData.matrix = transform.GetWorldMatrix();
+	vsData.colorTint = shaderData.colorTint;
 
-	VertexShaderData vsData;
-	vsData.colorTint = XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f);
-	vsData.offset = XMFLOAT3(0.25f, 0.0f, 0.0f);
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-
-
-	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	Graphics::Context->Unmap(constantBuffer.Get(), 0);
 	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
 	Graphics::Context->Unmap(constantBuffer.Get(), 0);

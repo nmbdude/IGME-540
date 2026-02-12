@@ -6,6 +6,7 @@
 #include "BufferStructs.h"
 #include "Mesh.h"
 #include "BufferStructs.h"
+#include "Transform.h"
 #include <memory>
 #include <vector>
 
@@ -52,10 +53,9 @@ private:
 
 	VertexShaderData shaderData;
 
+	Transform transform;
 
 	std::vector<std::shared_ptr<Mesh>> meshList;
-
-	VertexShaderData vsData;
 
 	std::shared_ptr<Mesh> triangleMesh;
 	std::shared_ptr<Mesh> quadMesh;
