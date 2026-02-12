@@ -33,7 +33,7 @@ DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 
 DirectX::XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 {
-	XMFLOAT4X4 wITM;
+	XMFLOAT4X4 wITM = {};
 	if(dirty)
 	{
 		XMMATRIX tMat = XMMatrixTranslationFromVector(XMLoadFloat3(&position));

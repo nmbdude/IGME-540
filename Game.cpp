@@ -20,6 +20,9 @@
 // For the DirectX Math library
 using namespace DirectX;
 
+
+XMFLOAT3 pos = XMFLOAT3(0.f, 0.f, 0.f);
+
 // --------------------------------------------------------
 // The constructor is called after the window and graphics API
 // are initialized but before the game loop begins
@@ -52,6 +55,10 @@ Game::Game()
 		//    these calls will need to happen multiple times per frame
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
+		Graphics::Context->VSSetConstantBuffers(
+			0, // Which slot (register) to bind the buffer to?
+			1, // How many are we setting right now?
+			constantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 	}
 
 	// Initialize ImGui itself & platform/renderer backends
@@ -63,6 +70,8 @@ Game::Game()
 	ImGui::StyleColorsDark();
 	//ImGui::StyleColorsLight();
 	//ImGui::StyleColorsClassic();
+
+	
 
 	backgroundColor[0] = 0.4f;
 	backgroundColor[1] = 0.6f;
@@ -141,7 +150,7 @@ void Game::LoadShaders()
 		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 		Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
-
+		
 		
 	}
 
@@ -172,10 +181,7 @@ void Game::LoadShaders()
 			inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
 
-	Graphics::Context->VSSetConstantBuffers(
-		0, // Which slot (register) to bind the buffer to?
-		1, // How many are we setting right now?
-		constantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
+	
 }
 
 
@@ -193,7 +199,7 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(-0.5f, +0.6f, 0.f), COLORS::BLUE},
 			{ XMFLOAT3(-0.8f, +0.6f, 0.f), COLORS::WHITE},
 		};
-		quadMesh = std::make_shared<Mesh>(6, quadIndices, 4, quadVertices);
+		Mesh quadMesh = Mesh(6, quadIndices, 4, quadVertices);
 
 		unsigned int spaceshipIndices[] = { 0,1,3, 1,2,3, 0,3,5, 3,4,5 };
 		Vertex spaceshipVertices[] = {
@@ -204,7 +210,7 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(+0.9f, +0.65f, 0.f), COLORS::BLACK},
 			{ XMFLOAT3(+0.75f, +0.6f, 0.f), COLORS::BLACK}
 		};
-		spaceshipMesh = std::make_shared<Mesh>(12, spaceshipIndices, 6, spaceshipVertices);
+		Mesh spaceshipMesh = Mesh(12, spaceshipIndices, 6, spaceshipVertices);
 
 		unsigned int triangleIndices[] = { 0, 1, 2 };
 		Vertex triangleVertices[] =
@@ -213,11 +219,17 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(+0.5f, -0.5f, +0.0f), COLORS::BLUE},
 			{ XMFLOAT3(-0.5f, -0.5f, +0.0f), COLORS::GREEN},
 		};
-		triangleMesh = std::make_shared<Mesh>(3, triangleIndices, 3, triangleVertices);
+		Mesh triangleMesh = Mesh(3, triangleIndices, 3, triangleVertices);
 
-		meshList.push_back(triangleMesh);
-		meshList.push_back(quadMesh);
-		meshList.push_back(spaceshipMesh);
+		ATriganle = Actor(std::make_shared<Mesh>(triangleMesh));
+		AQuad = Actor(std::make_shared<Mesh>(quadMesh));
+		ASpaceship = Actor(std::make_shared<Mesh>(spaceshipMesh));
+
+		actorList.push_back(std::make_shared<Actor>(ATriganle));
+		actorList.push_back(std::make_shared<Actor>(AQuad));
+		actorList.push_back(std::make_shared<Actor>(ASpaceship));
+
+		pos = ATriganle.GetTransform()->GetPosition();
 	}
 }
 
@@ -262,33 +274,39 @@ void Game::Update(float deltaTime, float totalTime)
 
 	// Custom windows
 	ImGui::Begin("Details");
-	if(ImGui::CollapsingHeader("App Details"))
+	if(ImGui::TreeNode("App Details"))
 	{
 		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
 		ImGui::Text("Window Size: %d x %d", Window::Width(), Window::Height());
+		ImGui::TreePop();
 	}
-	if (ImGui::CollapsingHeader("Meshes"))
+	if (ImGui::TreeNode("Meshes"))
 	{
-		if (ImGui::CollapsingHeader("Mesh: Triangle"))
+		if (ImGui::TreeNode("Mesh: Triangle"))
 		{
-			ImGui::Text("Triangles: %d", triangleMesh->GetTriangleCount());
-			ImGui::Text("Vertices: %d", triangleMesh->GetVertexCount());
-			ImGui::Text("Indices: %d", triangleMesh->GetIndexCount());
+			ImGui::Text("Triangles: %d", ATriganle.GetMesh()->GetTriangleCount());
+			ImGui::Text("Vertices: %d", ATriganle.GetMesh()->GetVertexCount());
+			ImGui::Text("Indices: %d", ATriganle.GetMesh()->GetIndexCount());
+			ImGui::DragFloat3("Triangle Position", (float*)&pos, 0.01f);
+			ImGui::TreePop();
 		}
-		if (ImGui::CollapsingHeader("Mesh: Quad"))
+		if (ImGui::TreeNode("Mesh: Quad"))
 		{
-			ImGui::Text("Triangles: %d", quadMesh->GetTriangleCount());
-			ImGui::Text("Vertices: %d", quadMesh->GetVertexCount());
-			ImGui::Text("Indices: %d", quadMesh->GetIndexCount());
+			ImGui::Text("Triangles: %d", AQuad.GetMesh()->GetTriangleCount());
+			ImGui::Text("Vertices: %d", AQuad.GetMesh()->GetVertexCount());
+			ImGui::Text("Indices: %d", AQuad.GetMesh()->GetIndexCount());
+			ImGui::TreePop();
 		}
-		if (ImGui::CollapsingHeader("Mesh: Spaceship"))
+		if (ImGui::TreeNode("Mesh: Spaceship"))
 		{
-			ImGui::Text("Triangles: %d", spaceshipMesh->GetTriangleCount());
-			ImGui::Text("Vertices: %d", spaceshipMesh->GetVertexCount());
-			ImGui::Text("Indices: %d", spaceshipMesh->GetIndexCount());
+			ImGui::Text("Triangles: %d", ASpaceship.GetMesh()->GetTriangleCount());
+			ImGui::Text("Vertices: %d", ASpaceship.GetMesh()->GetVertexCount());
+			ImGui::Text("Indices: %d", ASpaceship.GetMesh()->GetIndexCount());
+			ImGui::TreePop();
 		}
+		ImGui::TreePop();
 	}
-	if(ImGui::CollapsingHeader("Customization"))
+	if(ImGui::TreeNode("Customization"))
 	{
 		ImGui::Checkbox("Rainbow Mode", &rainbowMode);
 		if (rainbowMode) 
@@ -306,7 +324,7 @@ void Game::Update(float deltaTime, float totalTime)
 			ImGui::ColorEdit4("Background Color", backgroundColor);
 		}
 		ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
-		//ImGui::DragFloat3("Offset", (float*)&shaderData.matrix, 0.1f);
+		ImGui::TreePop();
 	}
 	if (ImGui::Button("Toggle Demo Window"))
 	{
@@ -334,6 +352,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+
+	transform.SetScale(sinf(totalTime), sinf(totalTime), 0.f);
 	
 	vsData.matrix = transform.GetWorldMatrix();
 	vsData.colorTint = shaderData.colorTint;
@@ -342,9 +362,9 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
 	Graphics::Context->Unmap(constantBuffer.Get(), 0);
-	for(std::shared_ptr<Mesh> mesh : meshList)
+	for(std::shared_ptr<Actor> actor : actorList)
 	{
-		mesh->Draw();
+		actor->Draw();
 	}
 
 	// ImGui Render

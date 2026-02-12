@@ -6,6 +6,7 @@
 #include "BufferStructs.h"
 #include "Mesh.h"
 #include "BufferStructs.h"
+#include "Actor.h"
 #include "Transform.h"
 #include <memory>
 #include <vector>
@@ -23,7 +24,6 @@ public:
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 	void OnResize();
-
 private:
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
@@ -55,10 +55,12 @@ private:
 
 	Transform transform;
 
-	std::vector<std::shared_ptr<Mesh>> meshList;
+	std::vector<std::shared_ptr<Actor>> actorList;
+	
 
-	std::shared_ptr<Mesh> triangleMesh;
-	std::shared_ptr<Mesh> quadMesh;
-	std::shared_ptr<Mesh> spaceshipMesh;
+	//New Actors
+	Actor ATriganle;
+	Actor AQuad;
+	Actor ASpaceship;
 };
 
