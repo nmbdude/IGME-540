@@ -318,10 +318,6 @@ void Game::Update(float deltaTime, float totalTime)
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
-
-	
-	//if (Input::KeyDown('W'))
-	transform.SetPosition(sinf(totalTime), 0, 0);
 }
 
 
