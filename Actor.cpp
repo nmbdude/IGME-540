@@ -20,6 +20,9 @@ Actor::~Actor()
 
 }
 
+void Actor::SetName(std::string name) { this->name = name; }
+std::string Actor::GetName() { return name; }
+
 std::shared_ptr<Mesh> Actor::GetMesh() { return mesh; }
 std::shared_ptr<Transform> Actor::GetTransform() { return transform; }
 

@@ -51,6 +51,7 @@ void Transform::MoveAbsolute(float x, float y, float z)
 {
 	dirty = true;
 	XMVECTOR posVec = XMLoadFloat3(&position);
+	posVec = XMVectorSet(x, y, z, 0);
 	posVec += XMVectorSet(x, y, z, 0);
 	XMStoreFloat3(&position, posVec);
 }

@@ -20,9 +20,6 @@
 // For the DirectX Math library
 using namespace DirectX;
 
-
-XMFLOAT3 pos = XMFLOAT3(0.f, 0.f, 0.f);
-
 // --------------------------------------------------------
 // The constructor is called after the window and graphics API
 // are initialized but before the game loop begins
@@ -77,7 +74,7 @@ Game::Game()
 	backgroundColor[1] = 0.6f;
 	backgroundColor[2] = 0.75f;
 	backgroundColor[3] = 1.0f;
-	demoVisible = true;
+	demoVisible = false;
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
 	shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
@@ -199,7 +196,7 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(-0.5f, +0.6f, 0.f), COLORS::BLUE},
 			{ XMFLOAT3(-0.8f, +0.6f, 0.f), COLORS::WHITE},
 		};
-		Mesh quadMesh = Mesh(6, quadIndices, 4, quadVertices);
+		Mesh quadMesh = Mesh(6, quadIndices, 4, quadVertices, "Quad");
 
 		unsigned int spaceshipIndices[] = { 0,1,3, 1,2,3, 0,3,5, 3,4,5 };
 		Vertex spaceshipVertices[] = {
@@ -210,7 +207,7 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(+0.9f, +0.65f, 0.f), COLORS::BLACK},
 			{ XMFLOAT3(+0.75f, +0.6f, 0.f), COLORS::BLACK}
 		};
-		Mesh spaceshipMesh = Mesh(12, spaceshipIndices, 6, spaceshipVertices);
+		Mesh spaceshipMesh = Mesh(12, spaceshipIndices, 6, spaceshipVertices, "Spaceship");
 
 		unsigned int triangleIndices[] = { 0, 1, 2 };
 		Vertex triangleVertices[] =
@@ -219,17 +216,29 @@ void Game::CreateGeometry()
 			{ XMFLOAT3(+0.5f, -0.5f, +0.0f), COLORS::BLUE},
 			{ XMFLOAT3(-0.5f, -0.5f, +0.0f), COLORS::GREEN},
 		};
-		Mesh triangleMesh = Mesh(3, triangleIndices, 3, triangleVertices);
+		Mesh triangleMesh = Mesh(3, triangleIndices, 3, triangleVertices, "Triangle");
 
-		ATriganle = Actor(std::make_shared<Mesh>(triangleMesh));
+		ATriangle = Actor(std::make_shared<Mesh>(triangleMesh));
 		AQuad = Actor(std::make_shared<Mesh>(quadMesh));
 		ASpaceship = Actor(std::make_shared<Mesh>(spaceshipMesh));
+		AOtherActor1 = AOtherActor1 = Actor(std::make_shared<Mesh>(triangleMesh));
+		AOtherActor2 = AOtherActor2 = Actor(std::make_shared<Mesh>(spaceshipMesh));
 
-		actorList.push_back(std::make_shared<Actor>(ATriganle));
+		ATriangle.SetName("Triangle");
+		AQuad.SetName("Quad");
+		ASpaceship.SetName("Spaceship");
+		AOtherActor1.SetName("Other Actor 1");
+		AOtherActor2.SetName("Other Actor 2");
+
+		AOtherActor1.GetTransform()->SetPosition(XMFLOAT3{ -0.5f, -0.5f, 0.f });
+		AOtherActor2.GetTransform()->SetPosition(XMFLOAT3{ -0.55f, -0.5f, 0.f });
+
+
+		actorList.push_back(std::make_shared<Actor>(ATriangle));
 		actorList.push_back(std::make_shared<Actor>(AQuad));
 		actorList.push_back(std::make_shared<Actor>(ASpaceship));
-
-		pos = ATriganle.GetTransform()->GetPosition();
+		actorList.push_back(std::make_shared<Actor>(AOtherActor1));
+		actorList.push_back(std::make_shared<Actor>(AOtherActor2));
 	}
 }
 
@@ -280,14 +289,51 @@ void Game::Update(float deltaTime, float totalTime)
 		ImGui::Text("Window Size: %d x %d", Window::Width(), Window::Height());
 		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("Actors"))
+	{
+		ImGui::Text("Actor Count: %d", actorList.size());
+		// Use a counter to create unique labels for ImGui widgets in case they have the same name
+		int count = 0;
+		for (std::shared_ptr<Actor> actor : actorList)
+		{
+			if (ImGui::TreeNode(actor->GetName().c_str()))
+			{
+				XMFLOAT3 position = actor->GetTransform()->GetPosition();
+				XMFLOAT3 rotation = actor->GetTransform()->GetPitchYawRoll();
+				XMFLOAT3 scale = actor->GetTransform()->GetScale();
+				std::string posLabel = "Position##" + actor->GetName() + std::to_string(count);
+				std::string rotLabel = "Rotation##" + actor->GetName() + std::to_string(count);
+				std::string scaleLabel = "Scale##" + actor->GetName() + std::to_string(count);
+
+				ImGui::Text("Mesh: %s", actor->GetMesh()->GetName().c_str());
+
+				if (ImGui::DragFloat3(posLabel.c_str(), (float*)&position, 0.01f))
+				{
+					actor->GetTransform()->SetPosition(position);
+				}
+
+				if (ImGui::DragFloat3(rotLabel.c_str(), (float*)&rotation, 0.01f))
+				{
+					actor->GetTransform()->SetRotation(rotation);
+				}
+
+				if (ImGui::DragFloat3(scaleLabel.c_str(), (float*)&scale, 0.01f))
+				{
+					actor->GetTransform()->SetScale(scale);
+				}
+				count++;
+				ImGui::TreePop();
+			}
+		}
+		ImGui::TreePop();
+	}
 	if (ImGui::TreeNode("Meshes"))
 	{
 		if (ImGui::TreeNode("Mesh: Triangle"))
 		{
-			ImGui::Text("Triangles: %d", ATriganle.GetMesh()->GetTriangleCount());
-			ImGui::Text("Vertices: %d", ATriganle.GetMesh()->GetVertexCount());
-			ImGui::Text("Indices: %d", ATriganle.GetMesh()->GetIndexCount());
-			ImGui::DragFloat3("Triangle Position", (float*)&pos, 0.01f);
+			ImGui::Text("Triangles: %d", ATriangle.GetMesh()->GetTriangleCount());
+			ImGui::Text("Vertices: %d", ATriangle.GetMesh()->GetVertexCount());
+			ImGui::Text("Indices: %d", ATriangle.GetMesh()->GetIndexCount());
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("Mesh: Quad"))
@@ -333,6 +379,14 @@ void Game::Update(float deltaTime, float totalTime)
 
 	ImGui::End();
 
+	for (std::shared_ptr<Actor> actor : actorList)
+	{
+		actor->GetTransform()->Rotate(0.0f, 0.0f, deltaTime * 0.5f);
+		actor->GetTransform()->SetPosition(sinf(totalTime) * 0.5f, actor->GetTransform()->GetPosition().y, actor->GetTransform()->GetPosition().z);
+		actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
+	}
+
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -352,18 +406,18 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
-
-	transform.SetScale(sinf(totalTime), sinf(totalTime), 0.f);
 	
-	vsData.matrix = transform.GetWorldMatrix();
-	vsData.colorTint = shaderData.colorTint;
 
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	Graphics::Context->Unmap(constantBuffer.Get(), 0);
 	for(std::shared_ptr<Actor> actor : actorList)
 	{
+		VertexShaderData vsData = {};
+		vsData.colorTint = shaderData.colorTint;
+		vsData.matrix = actor->GetTransform()->GetWorldMatrix();
+
+		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+		Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+		memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
+		Graphics::Context->Unmap(constantBuffer.Get(), 0);
 		actor->Draw();
 	}
 

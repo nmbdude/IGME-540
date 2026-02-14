@@ -59,8 +59,10 @@ private:
 	
 
 	//New Actors
-	Actor ATriganle;
+	Actor ATriangle;
 	Actor AQuad;
 	Actor ASpaceship;
+	Actor AOtherActor1;
+	Actor AOtherActor2;
 };
 

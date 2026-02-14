@@ -1,10 +1,11 @@
 #include "Mesh.h"
 #include <memory>
 
-Mesh::Mesh(unsigned int indexCount, unsigned int* indices, unsigned int vertexCount, Vertex* vertices)
+Mesh::Mesh(unsigned int indexCount, unsigned int* indices, unsigned int vertexCount, Vertex* vertices, const std::string& meshName)
 {
 	this->indexCount = indexCount;
 	this->vertexCount = vertexCount;
+	this->name = meshName;
 	D3D11_BUFFER_DESC vbd = {};
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
 	vbd.ByteWidth = vertexCount * sizeof(Vertex);
@@ -59,6 +60,11 @@ Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetIndexBuffer()
 int Mesh::GetIndexCount()
 {
 	return indexCount;
+}
+
+std::string Mesh::GetName()
+{
+	return name;
 }
 
 int Mesh::GetVertexCount()
