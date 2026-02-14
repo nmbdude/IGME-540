@@ -233,7 +233,6 @@ void Game::CreateGeometry()
 		AOtherActor1.GetTransform()->SetPosition(XMFLOAT3{ -0.5f, -0.5f, 0.f });
 		AOtherActor2.GetTransform()->SetPosition(XMFLOAT3{ -0.55f, -0.5f, 0.f });
 
-
 		actorList.push_back(std::make_shared<Actor>(ATriangle));
 		actorList.push_back(std::make_shared<Actor>(AQuad));
 		actorList.push_back(std::make_shared<Actor>(ASpaceship));
@@ -280,6 +279,12 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	NewFrame(deltaTime);
+	for (std::shared_ptr<Actor> actor : actorList)
+	{
+		actor->GetTransform()->SetPosition(sinf(totalTime) * 0.5f, actor->GetTransform()->GetPosition().y, actor->GetTransform()->GetPosition().z);
+		//actor->GetTransform()->Rotate(0.0f, 0.0f, deltaTime * 0.5f);
+		//actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
+	}
 
 	// Custom windows
 	ImGui::Begin("Details");
@@ -311,12 +316,10 @@ void Game::Update(float deltaTime, float totalTime)
 				{
 					actor->GetTransform()->SetPosition(position);
 				}
-
 				if (ImGui::DragFloat3(rotLabel.c_str(), (float*)&rotation, 0.01f))
 				{
 					actor->GetTransform()->SetRotation(rotation);
 				}
-
 				if (ImGui::DragFloat3(scaleLabel.c_str(), (float*)&scale, 0.01f))
 				{
 					actor->GetTransform()->SetScale(scale);
@@ -379,12 +382,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 	ImGui::End();
 
-	for (std::shared_ptr<Actor> actor : actorList)
-	{
-		actor->GetTransform()->Rotate(0.0f, 0.0f, deltaTime * 0.5f);
-		actor->GetTransform()->SetPosition(sinf(totalTime) * 0.5f, actor->GetTransform()->GetPosition().y, actor->GetTransform()->GetPosition().z);
-		actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
-	}
+
 
 
 	// Example input checking: Quit if the escape key is pressed
