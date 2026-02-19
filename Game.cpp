@@ -68,7 +68,17 @@ Game::Game()
 	//ImGui::StyleColorsLight();
 	//ImGui::StyleColorsClassic();
 
-	
+
+	camera1 = std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -1.0f));
+	camera2 = std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-2.0f, 0.0f, -1.0f), XMFLOAT3(0.0f, XMConvertToRadians(45.f), 0.0f), 45.0f);
+	camera3 = std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(2.0f, 0.0f, -1.0f), XMFLOAT3(0.0f, XMConvertToRadians(-45.f), 0.0f), 70.0f);
+
+	cameras.push_back(camera1);
+	cameras.push_back(camera2);
+	cameras.push_back(camera3);
+
+	activeCamera = camera1;
+	activeCameraIndex = 0;
 
 	backgroundColor[0] = 0.4f;
 	backgroundColor[1] = 0.6f;
@@ -269,7 +279,10 @@ void Game::NewFrame(float deltaTime)
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	
+	for (std::shared_ptr<Camera> camera : cameras)
+	{
+		if (camera) { camera->UpdateProjectionMatrix(Window::AspectRatio()); }
+	}
 }
 
 
@@ -286,12 +299,39 @@ void Game::Update(float deltaTime, float totalTime)
 		//actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
 	}
 
+#pragma region UI
 	// Custom windows
 	ImGui::Begin("Details");
 	if(ImGui::TreeNode("App Details"))
 	{
 		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
 		ImGui::Text("Window Size: %d x %d", Window::Width(), Window::Height());
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("Cameras"))
+	{
+		ImGui::Text("Camera Count: %d", cameras.size());
+		int count = 1;
+		if (ImGui::Combo("Camera Quick Switch", &activeCameraIndex, "Camera 1\0Camera 2\0Camera 3\0")) { activeCamera = cameras[activeCameraIndex]; }
+		for (std::shared_ptr<Camera> camera : cameras)
+		{
+			std::string label = "Camera " + std::to_string(count);
+			if (ImGui::TreeNode(label.c_str()))
+			{
+				if (ImGui::Button("Set Active"))
+				{
+					activeCamera = camera;
+					activeCameraIndex = count - 1;
+				}
+				XMFLOAT3 position = camera->GetTransform().GetPosition();
+				XMFLOAT3 rotation = camera->GetTransform().GetPitchYawRoll();
+				ImGui::Text("Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+				ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", XMConvertToDegrees(rotation.x), XMConvertToDegrees(rotation.y), XMConvertToDegrees(rotation.z));
+				ImGui::Text("FOV: %.1f", camera->GetFOV());
+				ImGui::TreePop();
+			}
+			count++;
+		}
 		ImGui::TreePop();
 	}
 	if (ImGui::TreeNode("Actors"))
@@ -381,9 +421,9 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	ImGui::End();
+#pragma endregion
 
-
-
+	activeCamera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -411,6 +451,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		VertexShaderData vsData = {};
 		vsData.colorTint = shaderData.colorTint;
 		vsData.matrix = actor->GetTransform()->GetWorldMatrix();
+		vsData.view = activeCamera->GetViewMatrix();
+		vsData.projection = activeCamera->GetProjectionMatrix();
 
 		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 		Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);

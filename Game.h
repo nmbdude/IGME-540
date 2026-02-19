@@ -9,6 +9,7 @@
 #include "Actor.h"
 #include "Transform.h"
 #include <memory>
+#include "Camera.h"
 #include <vector>
 
 class Game
@@ -43,20 +44,17 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 
-	// User controls
-	float backgroundColor[4];
-	bool demoVisible;
-	bool rainbowMode;
-	float rainbowSpeed;
+	std::vector<std::shared_ptr<Camera>> cameras;
 
-	VertexShaderData vsData;
+	std::shared_ptr<Camera> activeCamera;
+	int activeCameraIndex;
+
+	std::shared_ptr<Camera> camera1;
+	std::shared_ptr<Camera> camera2;
+	std::shared_ptr<Camera> camera3;
 
 	VertexShaderData shaderData;
-
-	Transform transform;
-
 	std::vector<std::shared_ptr<Actor>> actorList;
-	
 
 	//New Actors
 	Actor ATriangle;
@@ -64,5 +62,11 @@ private:
 	Actor ASpaceship;
 	Actor AOtherActor1;
 	Actor AOtherActor2;
+
+	// User controls
+	float backgroundColor[4];
+	bool demoVisible;
+	bool rainbowMode;
+	float rainbowSpeed;
 };
 
