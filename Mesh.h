@@ -1,9 +1,11 @@
 #pragma once
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "tiny_obj_loader.h"
 #include <string>
 #include "Graphics.h"
 #include <DirectXMath.h>
+#include <vector>
 #include "Vertex.h"
 
 typedef Microsoft::WRL::ComPtr<ID3D11Buffer> ComPtrBuf;
@@ -27,7 +29,11 @@ class Mesh
 	int triangleCount;
 	std::string name;
 
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+
 public:
+	Mesh(const char* filePath);
 	Mesh(unsigned int indexCount, unsigned int* indices, unsigned int vertexCount, Vertex* vertices, const std::string& meshName);
 	Mesh();
 	~Mesh();

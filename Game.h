@@ -2,10 +2,11 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "Material.h"
 #include "Graphics.h"
 #include "BufferStructs.h"
 #include "Mesh.h"
-#include "BufferStructs.h"
+#include "TypeDefs.h"
 #include "Actor.h"
 #include "Transform.h"
 #include <memory>
@@ -28,7 +29,6 @@ public:
 private:
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
-	void LoadShaders();
 	void CreateGeometry();
 	void NewFrame(float deltaTime);
 
@@ -36,11 +36,6 @@ private:
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
-
-	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 
@@ -55,13 +50,18 @@ private:
 
 	VertexShaderData shaderData;
 	std::vector<std::shared_ptr<Actor>> actorList;
+	std::vector<std::shared_ptr<Mesh>> meshList;
 
 	//New Actors
-	Actor ATriangle;
+	Actor ASphere;
 	Actor AQuad;
-	Actor ASpaceship;
-	Actor AOtherActor1;
-	Actor AOtherActor2;
+	Actor AHelix;
+	Actor ACylinder;
+	Actor ACube;
+
+	std::shared_ptr<Material> material1;
+	std::shared_ptr<Material> material2;
+	std::shared_ptr<Material> material3;
 
 	// User controls
 	float backgroundColor[4];

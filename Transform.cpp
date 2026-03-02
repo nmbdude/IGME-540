@@ -57,18 +57,12 @@ DirectX::XMFLOAT3 Transform::GetRight()
 
 DirectX::XMFLOAT3 Transform::GetUp()
 {
-	XMVECTOR up = XMVector3Rotate(XMVectorSet(0, 1, 0, 0), XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z));
-	XMFLOAT3 upFloat3;
-	XMStoreFloat3(&upFloat3, up);
-	return upFloat3;
+	return up;
 }
 
 DirectX::XMFLOAT3 Transform::GetForward()
 {
-	XMVECTOR forward = XMVector3Rotate(XMVectorSet(0, 0, 1, 0), XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z));
-	XMFLOAT3 forwardFloat3;
-	XMStoreFloat3(&forwardFloat3, forward);
-	return forwardFloat3;
+	return forward;
 }
 
 void Transform::MoveAbsolute(float x, float y, float z)
