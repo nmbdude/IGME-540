@@ -14,6 +14,7 @@ public:
 	Actor(std::shared_ptr<Mesh> mesh);
 	Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Transform> transform);
 	Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
+	Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material, std::string name);
 	Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Transform> transform, std::shared_ptr<Material> material);
 	~Actor();
 	

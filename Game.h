@@ -31,13 +31,15 @@ private:
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void CreateGeometry();
 	void NewFrame(float deltaTime);
+	void CreateRowOfGeometry(std::shared_ptr<Material> material, float y, float xOffset, float zOffset);
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelConstantBuffer;
 
 	std::vector<std::shared_ptr<Camera>> cameras;
 
@@ -59,9 +61,12 @@ private:
 	Actor ACylinder;
 	Actor ACube;
 
-	std::shared_ptr<Material> material1;
-	std::shared_ptr<Material> material2;
-	std::shared_ptr<Material> material3;
+	std::shared_ptr<Material> MRed;
+	std::shared_ptr<Material> MGreen;
+	std::shared_ptr<Material> MBlue;
+	std::shared_ptr<Material> MDebugNormals;
+	std::shared_ptr<Material> MDebugUVs;
+	std::shared_ptr<Material> MCustom;
 
 	// User controls
 	float backgroundColor[4];

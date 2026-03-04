@@ -1,6 +1,6 @@
 cbuffer ExternalData : register(b0)
 {
-    float4 colorTint;
+    float4 color;
     float2 uv;
     float2 padding;
     float3 normal;
@@ -19,9 +19,9 @@ struct VertexToPixel
 	//  |   Name          Semantic
 	//  |    |                |
 	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-	float3 normal			: NORMAL;
+    float4 screenPosition   : SV_POSITION;
+    float2 uv               : TEXCOORD;
+    float3 normal           : NORMAL;
 };
 
 // --------------------------------------------------------
@@ -35,9 +35,8 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
-    return colorTint;
+    float tileCount = 4.0;
+    float x = cos(input.uv.x * 6.2832 * tileCount) + time * 3;
+    float y = sin(input.uv.y * 6.2832 * tileCount) + time * 2;
+    return float4(cos(x) + 0.1f, sin(y) + 0.1f, sin(y * 0.25f) + 0.2f, cos(x * 0.5f) + 0.25f);
 }

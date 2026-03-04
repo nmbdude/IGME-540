@@ -26,25 +26,40 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
-	unsigned int size = sizeof(VertexShaderData);
-	size = (size + 15) / 16 * 16;
+	srand((unsigned int)time(0));
+	unsigned int vcbSize = sizeof(VertexShaderData);
+	vcbSize = (vcbSize + 15) / 16 * 16;
 
 	// Describe the constant buffer
-	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = size; // Must be a multiple of 16
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
+	D3D11_BUFFER_DESC vcbDesc = {}; // Sets struct to all zeros
+	vcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	vcbDesc.ByteWidth = vcbSize; // Must be a multiple of 16
+	vcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	vcbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&vcbDesc, 0, vertexConstantBuffer.GetAddressOf());
 	Graphics::Context->VSSetConstantBuffers(
 		0, // Which slot (register) to bind the buffer to?
 		1, // How many are we setting right now?
-		constantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
+		vertexConstantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 	Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	material1 = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	material2 = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	material3 = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	unsigned int pcbSize = sizeof(PixelShaderData);
+	pcbSize = (pcbSize + 15) / 16 * 16;
+
+	D3D11_BUFFER_DESC pcbDesc = {};
+	pcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	pcbDesc.ByteWidth = pcbSize;
+	pcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	pcbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&pcbDesc, 0, pixelConstantBuffer.GetAddressOf());
+	Graphics::Context->PSSetConstantBuffers(0, 1, pixelConstantBuffer.GetAddressOf());
+
+	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MBlue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MDebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
+	MDebugUVs = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugUVsPS.cso");
+	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -75,7 +90,7 @@ Game::Game()
 	demoVisible = false;
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
-	shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
+	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
 
 	CreateGeometry();
 }
@@ -108,32 +123,19 @@ void Game::CreateGeometry()
 		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
 		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
 		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
+		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
 
 		meshList.push_back(MSphere);
 		meshList.push_back(MQuad);
 		meshList.push_back(MCylinder);
 		meshList.push_back(MHelix);
 		meshList.push_back(MCube);
-
-		ASphere = Actor(MSphere, material1);
-		AQuad = Actor(MQuad, material2);
-		ACylinder = Actor(MCylinder, material3);
-		AHelix = Actor(MHelix, material1);
-		ACube = Actor(MCube, material3);
-		ASphere.SetName("Sphere");
-		AQuad.SetName("Quad");
-		ACylinder.SetName("Cylinder");
-		AHelix.SetName("Helix");
-		ACube.SetName("Cube");
-
-		AHelix.GetTransform()->SetPosition(XMFLOAT3{ -0.5f, -0.5f, 0.f });
-		ACube.GetTransform()->SetPosition(XMFLOAT3{ -0.55f, -0.5f, 0.f });
-		actorList.push_back(std::make_shared<Actor>(ASphere));
-		actorList.push_back(std::make_shared<Actor>(AQuad));
-		actorList.push_back(std::make_shared<Actor>(ACylinder));
-		actorList.push_back(std::make_shared<Actor>(AHelix));
-		actorList.push_back(std::make_shared<Actor>(ACube));
+		meshList.push_back(MTorus);
 	}
+
+	CreateRowOfGeometry(MDebugNormals, 3.f, -7.f, 5.f);
+	CreateRowOfGeometry(MDebugUVs, 0.f, -7.f, 5.f);
+	CreateRowOfGeometry(MCustom, -3.f, -7.f, 5.f);
 }
 
 void Game::NewFrame(float deltaTime)
@@ -155,6 +157,45 @@ void Game::NewFrame(float deltaTime)
 	{
 		ImGui::ShowDemoWindow();
 	}
+}
+
+void Game::CreateRowOfGeometry(std::shared_ptr<Material> material, float y, float xOffset, float zOffset)
+{
+	int randomID = rand() % 1000;
+	Actor cube = Actor(meshList[4], material, "Cube##" + std::to_string(randomID));
+	cube.GetTransform()->SetPosition(XMFLOAT3{ 0.f + xOffset, y, 0.f + zOffset });
+	cube.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(cube));
+
+	Actor cylinder = Actor(meshList[2], material, "Cylinder##" + std::to_string(randomID));
+	cylinder.GetTransform()->SetPosition(XMFLOAT3{ 3.f + xOffset, y, 0.f + zOffset });
+	cylinder.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(cylinder));
+
+	Actor helix = Actor(meshList[3], material, "Helix##" + std::to_string(randomID));
+	helix.GetTransform()->SetPosition(XMFLOAT3{ 6.f + xOffset, y, 0.f + zOffset });
+	helix.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(helix));
+
+	Actor sphere = Actor(meshList[0], material, "Sphere##" + std::to_string(randomID));
+	sphere.GetTransform()->SetPosition(XMFLOAT3{ 9.f + xOffset, y, 0.f + zOffset });
+	sphere.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(sphere));
+
+	Actor torus = Actor(meshList[5], material, "Torus##" + std::to_string(randomID));
+	torus.GetTransform()->SetPosition(XMFLOAT3{ 12.f + xOffset, y, 0.f + zOffset });
+	torus.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(torus));
+
+	Actor quad = Actor(meshList[1], material, "Quad##" + std::to_string(randomID));
+	quad.GetTransform()->SetPosition(XMFLOAT3{ 15.f + xOffset, y, 0.f + zOffset });
+	quad.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(quad));
+
+	Actor quad2 = Actor(meshList[1], material, "Quad2##" + std::to_string(randomID));
+	quad2.GetTransform()->SetPosition(XMFLOAT3{ 18.f + xOffset, y, 0.f + zOffset });
+	quad2.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+	actorList.push_back(std::make_shared<Actor>(quad2));
 }
 
 
@@ -179,7 +220,7 @@ void Game::Update(float deltaTime, float totalTime)
 	NewFrame(deltaTime);
 	for (std::shared_ptr<Actor> actor : actorList)
 	{
-		actor->GetTransform()->SetPosition(sinf(totalTime) * 0.5f, actor->GetTransform()->GetPosition().y, actor->GetTransform()->GetPosition().z);
+		//actor->GetTransform()->SetPosition(sinf(totalTime) * 0.5f, actor->GetTransform()->GetPosition().y, actor->GetTransform()->GetPosition().z);
 		//actor->GetTransform()->Rotate(0.0f, 0.0f, deltaTime * 0.5f);
 		//actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
 	}
@@ -226,7 +267,8 @@ void Game::Update(float deltaTime, float totalTime)
 		int count = 0;
 		for (std::shared_ptr<Actor> actor : actorList)
 		{
-			if (ImGui::TreeNode(actor->GetName().c_str()))
+			std::string label = actor->GetName().c_str() + std::to_string(count);
+			if (ImGui::TreeNode(label.c_str()))
 			{
 				XMFLOAT3 position = actor->GetTransform()->GetPosition();
 				XMFLOAT3 rotation = actor->GetTransform()->GetPitchYawRoll();
@@ -286,7 +328,7 @@ void Game::Update(float deltaTime, float totalTime)
 		{
 			ImGui::ColorEdit4("Background Color", backgroundColor);
 		}
-		ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
+		//ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
 		ImGui::TreePop();
 	}
 	if (ImGui::Button("Toggle Demo Window"))
@@ -323,15 +365,23 @@ void Game::Draw(float deltaTime, float totalTime)
 	for(std::shared_ptr<Actor> actor : actorList)
 	{
 		VertexShaderData vsData = {};
-		vsData.colorTint = actor->GetMaterial()->GetColorTint();
 		vsData.matrix = actor->GetTransform()->GetWorldMatrix();
 		vsData.view = activeCamera->GetViewMatrix();
 		vsData.projection = activeCamera->GetProjectionMatrix();
 
+		PixelShaderData psData = {};
+		psData.colorTint = actor->GetMaterial()->GetColorTint();
+		psData.time = totalTime;
+
 		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-		Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+		Graphics::Context->Map(vertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 		memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-		Graphics::Context->Unmap(constantBuffer.Get(), 0);
+		Graphics::Context->Unmap(vertexConstantBuffer.Get(), 0);
+
+		Graphics::Context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+		memcpy(mappedBuffer.pData, &psData, sizeof(psData));
+		Graphics::Context->Unmap(pixelConstantBuffer.Get(), 0);
+
 		actor->Draw();
 	}
 

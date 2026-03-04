@@ -12,6 +12,12 @@ Actor::Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Transform> transform)
 Actor::Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
 	: Actor(mesh, std::make_shared<Transform>(), material) {}
 
+Actor::Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material, std::string name)
+	: Actor(mesh, std::make_shared<Transform>(), material) 
+{
+	this->name = name;
+}
+
 Actor::Actor(std::shared_ptr<Mesh> mesh, std::shared_ptr<Transform> transform, std::shared_ptr<Material> material) 
 	: mesh(mesh), transform(transform), material(material) {}
 

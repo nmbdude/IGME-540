@@ -5,9 +5,9 @@
 
 using namespace DirectX;
 
-Material::Material() : Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), nullptr, nullptr) {}
+Material::Material() : Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), VertexShaderPtr(), PixelShaderPtr()) {}
 
-Material::Material(DirectX::XMFLOAT4 colorTint) : Material(colorTint, nullptr, nullptr) {}
+Material::Material(DirectX::XMFLOAT4 colorTint) : Material(colorTint, VertexShaderPtr(), PixelShaderPtr()) {}
 
 Material::Material(const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath)
 	: colorTint(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))
@@ -49,7 +49,7 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	//  - Doing this NOW because it requires a vertex shader's byte code to verify against!
 	//  - Luckily, we already have that loaded (the vertex shader blob above)
 
-	D3D11_INPUT_ELEMENT_DESC inputElements[3] = {};
+	D3D11_INPUT_ELEMENT_DESC inputElements[4] = {};
 
 	// Set up the first element - a position, which is 3 float values
 	inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				// Most formats are described as color channels; really it just means "Three 32-bit floats"
@@ -66,10 +66,15 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input!
 	inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
+	// Set up the second element - a color, which is 4 more float values
+	inputElements[3].Format = DXGI_FORMAT_R32_FLOAT;			// 3x 32-bit floats
+	inputElements[3].SemanticName = "TIME";							// Match our vertex shader input!
+	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
+
 	// Create the input layout, verifying our description against actual shader code
 	Graphics::Device->CreateInputLayout(
 		inputElements,							// An array of descriptions
-		3,										// How many elements in that array?
+		4,										// How many elements in that array?
 		vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
 		vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 		inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
