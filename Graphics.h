@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <d3d11shadertracing.h>
 #include <d3d11_1.h>
 #include <string>
 #include <wrl/client.h>
@@ -24,6 +25,12 @@ namespace Graphics
 	// Debug Layer
 	inline Microsoft::WRL::ComPtr<ID3D11InfoQueue> InfoQueue;
 
+	inline Microsoft::WRL::ComPtr<ID3D11DeviceContext1> Context1;
+	inline Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBufferHeap;
+
+	inline unsigned int cbHeapSizeInBytes;
+	inline unsigned int cbHeapOffsetInBytes;
+
 	// --- FUNCTIONS ---
 
 	// Getters
@@ -37,4 +44,10 @@ namespace Graphics
 
 	// Debug Layer
 	void PrintDebugMessages();
+
+	void FillAndBindNextConstantBuffer(
+		void* data,
+		unsigned int dataSizeInBytes,
+		D3D11_SHADER_TYPE shaderType,
+		unsigned int registerSlot);
 }

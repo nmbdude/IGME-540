@@ -11,6 +11,7 @@
 // Adjust as necessary for your own folder structure and project setup
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
+#include "WICTextureLoader.h"
 #include "ImGui/imgui_impl_win32.h"
 
 // Needed for a helper function to load pre-compiled shader files
@@ -27,32 +28,34 @@ using namespace DirectX;
 Game::Game()
 {
 	srand((unsigned int)time(0));
-	unsigned int vcbSize = sizeof(VertexShaderData);
-	vcbSize = (vcbSize + 15) / 16 * 16;
 
-	// Describe the constant buffer
-	D3D11_BUFFER_DESC vcbDesc = {}; // Sets struct to all zeros
-	vcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	vcbDesc.ByteWidth = vcbSize; // Must be a multiple of 16
-	vcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	vcbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&vcbDesc, 0, vertexConstantBuffer.GetAddressOf());
-	Graphics::Context->VSSetConstantBuffers(
-		0, // Which slot (register) to bind the buffer to?
-		1, // How many are we setting right now?
-		vertexConstantBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 	Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	unsigned int pcbSize = sizeof(PixelShaderData);
-	pcbSize = (pcbSize + 15) / 16 * 16;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shaderResourceView = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_Wood_D.jpg").c_str(),
+		0,
+		shaderResourceView.GetAddressOf()
+	);
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_Brick_D.jpg").c_str(),
+		0,
+		shaderResourceView.GetAddressOf()
+	);
 
-	D3D11_BUFFER_DESC pcbDesc = {};
-	pcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	pcbDesc.ByteWidth = pcbSize;
-	pcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	pcbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&pcbDesc, 0, pixelConstantBuffer.GetAddressOf());
-	Graphics::Context->PSSetConstantBuffers(0, 1, pixelConstantBuffer.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
 	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
@@ -369,18 +372,21 @@ void Game::Draw(float deltaTime, float totalTime)
 		vsData.view = activeCamera->GetViewMatrix();
 		vsData.projection = activeCamera->GetProjectionMatrix();
 
+		Graphics::FillAndBindNextConstantBuffer(
+			&vsData,
+			sizeof(VertexShaderData),
+			D3D11_VERTEX_SHADER,
+			0);
+
 		PixelShaderData psData = {};
 		psData.colorTint = actor->GetMaterial()->GetColorTint();
 		psData.time = totalTime;
 
-		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-		Graphics::Context->Map(vertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-		memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-		Graphics::Context->Unmap(vertexConstantBuffer.Get(), 0);
-
-		Graphics::Context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-		memcpy(mappedBuffer.pData, &psData, sizeof(psData));
-		Graphics::Context->Unmap(pixelConstantBuffer.Get(), 0);
+		Graphics::FillAndBindNextConstantBuffer(
+			&psData,
+			sizeof(PixelShaderData),
+			D3D11_PIXEL_SHADER,
+			0);
 
 		actor->Draw();
 	}

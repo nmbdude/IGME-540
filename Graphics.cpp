@@ -162,6 +162,17 @@ HRESULT Graphics::Initialize(unsigned int windowWidth, unsigned int windowHeight
 	debug->QueryInterface(IID_PPV_ARGS(InfoQueue.GetAddressOf()));
 #endif
 
+	Context->QueryInterface<ID3D11DeviceContext1>(Context1.GetAddressOf());
+	cbHeapOffsetInBytes = 0;
+	cbHeapSizeInBytes = 1000 * 256;
+	cbHeapSizeInBytes = (cbHeapSizeInBytes + 255) / 256 * 256;
+	D3D11_BUFFER_DESC cbHeapDesc = {};
+	cbHeapDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbHeapDesc.ByteWidth = cbHeapSizeInBytes;
+	cbHeapDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbHeapDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	Device->CreateBuffer(&cbHeapDesc, 0, ConstantBufferHeap.GetAddressOf());
+
 	return S_OK;
 }
 
@@ -319,4 +330,47 @@ void Graphics::PrintDebugMessages()
 
 	// Clear any messages we've printed
 	InfoQueue->ClearStoredMessages();
+}
+
+void Graphics::FillAndBindNextConstantBuffer(void* data, unsigned int dataSizeInBytes, D3D11_SHADER_TYPE shaderType, unsigned int registerSlot)
+{
+	unsigned int reservationSize = (dataSizeInBytes + 255) / 256 * 256;
+	if (cbHeapOffsetInBytes + reservationSize >= cbHeapSizeInBytes)
+	{
+		cbHeapOffsetInBytes = 0;
+	}
+	D3D11_MAPPED_SUBRESOURCE map = {};
+	Context->Map(ConstantBufferHeap.Get(), 0, D3D11_MAP_WRITE_NO_OVERWRITE, 0, &map);
+	void* uploadAddress = reinterpret_cast<void*>((UINT64)map.pData + cbHeapOffsetInBytes);
+	memcpy(uploadAddress, data, dataSizeInBytes);
+	Context->Unmap(ConstantBufferHeap.Get(), 0);
+	
+	unsigned int firstConstant = cbHeapOffsetInBytes / 16;
+	unsigned int numConstants = reservationSize / 16;
+
+	switch (shaderType)
+	{
+	case D3D11_VERTEX_SHADER:
+	{
+		Context1->VSSetConstantBuffers1(
+			registerSlot,
+			1,
+			ConstantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+	}
+
+	case D3D11_PIXEL_SHADER:
+	{
+		Context1->PSSetConstantBuffers1(
+			registerSlot,
+			1,
+			ConstantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+	}
+	}
+	cbHeapOffsetInBytes += reservationSize;
 }
