@@ -16,4 +16,7 @@ struct PixelShaderData
 	DirectX::XMFLOAT2 padding;
 	DirectX::XMFLOAT3 normal;
 	float time;
+	DirectX::XMFLOAT2 scale;
+	DirectX::XMFLOAT2 offset;
+	DirectX::XMFLOAT3 glowColor;
 };

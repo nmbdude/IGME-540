@@ -31,20 +31,32 @@ Game::Game()
 
 	Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shaderResourceView = {};
+	
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodSRV = {};
 	CreateWICTextureFromFile(
 		Graphics::Device.Get(),
 		Graphics::Context.Get(),
 		FixPath(L"../../Assets/Textures/Diffuse/T_Wood_D.jpg").c_str(),
 		0,
-		shaderResourceView.GetAddressOf()
+		woodSRV.GetAddressOf()
 	);
+	
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickSRV = {};
 	CreateWICTextureFromFile(
 		Graphics::Device.Get(),
 		Graphics::Context.Get(),
 		FixPath(L"../../Assets/Textures/Diffuse/T_Brick_D.jpg").c_str(),
 		0,
-		shaderResourceView.GetAddressOf()
+		brickSRV.GetAddressOf()
+	);
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> glowSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_BrickMask_D.jpg").c_str(),
+		0,
+		brickSRV.GetAddressOf()
 	);
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
@@ -57,27 +69,38 @@ Game::Game()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
-	MWhite = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MWhite->AddTextureSRV(0, shaderResourceView);
-	MWhite->AddSampler(0, samplerState);
+	MWood = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MWood->AddTextureSRV(0, woodSRV);
+	MWood->AddSampler(0, samplerState);
+
+	MGlowingBricks = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"GlowingBricksPS.cso");
+	MGlowingBricks->AddTextureSRV(0, brickSRV);
+	MGlowingBricks->AddTextureSRV(1, glowSRV);
+	MGlowingBricks->AddSampler(0, samplerState);
+
 	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MRed->AddTextureSRV(1, shaderResourceView);
-	MRed->AddSampler(1, samplerState);
+	MRed->AddTextureSRV(0, brickSRV);
+	MRed->AddSampler(0, samplerState);
+
 	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MGreen->AddTextureSRV(2, shaderResourceView);
-	MGreen->AddSampler(2, samplerState);
+	MGreen->AddTextureSRV(0, woodSRV);
+	MGreen->AddSampler(0, samplerState);
+
 	MBlue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MBlue->AddTextureSRV(3, shaderResourceView);
-	MBlue->AddSampler(3, samplerState);
+	MBlue->AddTextureSRV(0, brickSRV);
+	MBlue->AddSampler(0, samplerState);
+
 	MDebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
-	MDebugNormals->AddTextureSRV(4, shaderResourceView);
-	MDebugNormals->AddSampler(4, samplerState);
+	MDebugNormals->AddTextureSRV(0, woodSRV);
+	MDebugNormals->AddSampler(0, samplerState);
+
 	MDebugUVs = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugUVsPS.cso");
-	MDebugUVs->AddTextureSRV(5, shaderResourceView);
-	MDebugUVs->AddSampler(5, samplerState);
+	MDebugUVs->AddTextureSRV(0, brickSRV);
+	MDebugUVs->AddSampler(0, samplerState);
+
 	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
-	MCustom->AddTextureSRV(6, shaderResourceView);
-	MCustom->AddSampler(6, samplerState);
+	MCustom->AddTextureSRV(0, woodSRV);
+	MCustom->AddSampler(0, samplerState);
 	
 
 	// Initialize ImGui itself & platform/renderer backends
@@ -152,8 +175,8 @@ void Game::CreateGeometry()
 		meshList.push_back(MTorus);
 	}
 
-	CreateRowOfGeometry(MWhite, 3.f, -7.f, 5.f);
-	CreateRowOfGeometry(MRed, 0.f, -7.f, 5.f);
+	CreateRowOfGeometry(MWood, 3.f, -7.f, 5.f);
+	CreateRowOfGeometry(MGlowingBricks, 0.f, -7.f, 5.f);
 	CreateRowOfGeometry(MCustom, -3.f, -7.f, 5.f);
 }
 
@@ -397,6 +420,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		PixelShaderData psData = {};
 		psData.colorTint = actor->GetMaterial()->GetColorTint();
 		psData.time = totalTime;
+		psData.scale = actor->GetMaterial()->GetTextureScale();
+		psData.offset = actor->GetMaterial()->GetTextureOffset();
+		psData.glowColor = glowColor;
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&psData,
@@ -431,6 +457,3 @@ void Game::Draw(float deltaTime, float totalTime)
 			Graphics::DepthBufferDSV.Get());
 	}
 }
-
-
-

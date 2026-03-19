@@ -10,6 +10,8 @@ private:
 	VertexShaderPtr vertexShader;
 	PixelShaderPtr pixelShader;
 	InputLayoutPtr inputLayout;
+	DirectX::XMFLOAT2 scale = DirectX::XMFLOAT2(1.0f, 1.0f);
+	DirectX::XMFLOAT2 offset = DirectX::XMFLOAT2(0.0f, 0.0f);
 
 	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> textureSRVs;
 	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> samplers;
@@ -25,10 +27,16 @@ public:
 	DirectX::XMFLOAT4 GetColorTint();
 	VertexShaderPtr GetVertexShader();
 	PixelShaderPtr GetPixelShader();
+	DirectX::XMFLOAT2 GetTextureScale();
+	DirectX::XMFLOAT2 GetTextureOffset();
 
 	void SetColorTint(DirectX::XMFLOAT4 colorTint);
 	void SetVertexShader(VertexShaderPtr vertexShader);
 	void SetPixelShader(PixelShaderPtr pixelShader);
+	void SetTextureScale(DirectX::XMFLOAT2 textureScale);
+	void SetTextureScale(float x, float y);
+	void SetOffset(DirectX::XMFLOAT2 textureScale);
+	void SetOffset(float x, float y);
 
 	void CreateVertShaderFromFile(const wchar_t* filePath);
 	void CreatePixelShaderFromFile(const wchar_t* filePath);

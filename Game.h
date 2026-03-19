@@ -61,7 +61,8 @@ private:
 	Actor ACylinder;
 	Actor ACube;
 
-	std::shared_ptr<Material> MWhite;
+	std::shared_ptr<Material> MWood;
+	std::shared_ptr<Material> MGlowingBricks;
 	std::shared_ptr<Material> MRed;
 	std::shared_ptr<Material> MGreen;
 	std::shared_ptr<Material> MBlue;
@@ -74,5 +75,6 @@ private:
 	bool demoVisible;
 	bool rainbowMode;
 	float rainbowSpeed;
+	DirectX::XMFLOAT3 glowColor = {1.0f, 1.0f, 1.0f};
 };
 

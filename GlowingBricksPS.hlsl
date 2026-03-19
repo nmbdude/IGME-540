@@ -7,9 +7,11 @@ cbuffer ExternalData : register(b0)
     float time;
     float2 scale;
     float2 offset;
+    float3 glowColor;
 }
 
 Texture2D SurfaceTexture : register(t0);
+Texture2D MaskTexture : register(t1);
 SamplerState Sampler : register(s0);
 
 // Struct representing the data we expect to receive from earlier pipeline stages
@@ -24,9 +26,9 @@ struct VertexToPixel
 	//  |   Name          Semantic
 	//  |    |                |
 	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-	float3 normal			: NORMAL;
+    float4 screenPosition : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
 };
 
 // --------------------------------------------------------
@@ -40,7 +42,10 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    
     float2 uvs = input.uv * scale + offset;
     float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs);
-    return surfaceColor * colorTint;
+    float4 maskColor = MaskTexture.Sample(Sampler, uvs);
+    maskColor *= float4(glowColor, 1.0f);
+    return surfaceColor * colorTint * maskColor;
 }

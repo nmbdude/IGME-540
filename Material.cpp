@@ -25,13 +25,23 @@ Material::Material(DirectX::XMFLOAT4 colorTint, const wchar_t* vertexShaderFileP
 Material::Material(DirectX::XMFLOAT4 colorTint, VertexShaderPtr vertexShader, PixelShaderPtr pixelShader)
 	: colorTint(colorTint), vertexShader(vertexShader), pixelShader(pixelShader){}
 
+// GETTERS --------------------------------------------------------------------
 DirectX::XMFLOAT4 Material::GetColorTint() { return colorTint; }
 VertexShaderPtr Material::GetVertexShader() { return vertexShader; }
 PixelShaderPtr Material::GetPixelShader() { return pixelShader; }
+DirectX::XMFLOAT2 Material::GetTextureScale() { return scale; }
+DirectX::XMFLOAT2 Material::GetTextureOffset() { return offset; }
+// ----------------------------------------------------------------------------
 
+// SETTERS --------------------------------------------------------------------
 void Material::SetColorTint(DirectX::XMFLOAT4 colorTint) { this->colorTint = colorTint; }
 void Material::SetVertexShader(VertexShaderPtr vertexShader) { this->vertexShader = vertexShader; }
 void Material::SetPixelShader(PixelShaderPtr pixelShader) { this->pixelShader = pixelShader; }
+void Material::SetTextureScale(DirectX::XMFLOAT2 textureScale) { scale = textureScale; }
+void Material::SetTextureScale(float x, float y) { scale = DirectX::XMFLOAT2(x, y); }
+void Material::SetOffset(DirectX::XMFLOAT2 textureScale) { offset = textureScale; }
+void Material::SetOffset(float x, float y) { offset = DirectX::XMFLOAT2(x, y); }
+// ----------------------------------------------------------------------------
 
 void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 {
