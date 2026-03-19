@@ -61,6 +61,7 @@ private:
 	Actor ACylinder;
 	Actor ACube;
 
+	std::shared_ptr<Material> MWhite;
 	std::shared_ptr<Material> MRed;
 	std::shared_ptr<Material> MGreen;
 	std::shared_ptr<Material> MBlue;

@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include "TypeDefs.h"
+#include <unordered_map>
 
 class Material
 {
@@ -9,6 +10,10 @@ private:
 	VertexShaderPtr vertexShader;
 	PixelShaderPtr pixelShader;
 	InputLayoutPtr inputLayout;
+
+	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> textureSRVs;
+	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> samplers;
+
 
 public:
 	Material();
@@ -27,5 +32,9 @@ public:
 
 	void CreateVertShaderFromFile(const wchar_t* filePath);
 	void CreatePixelShaderFromFile(const wchar_t* filePath);
+
+	void AddTextureSRV(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv);
+	void AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
+	void BindTexturesAndSamplers();
 };
 

@@ -92,3 +92,25 @@ void Material::CreatePixelShaderFromFile(const wchar_t* filePath)
 		0, // No classes in this shader
 		pixelShader.GetAddressOf()); // ID3D11PixelShader**
 }
+
+void Material::AddTextureSRV(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv)
+{
+	textureSRVs.insert({ slot, srv });
+}
+
+void Material::AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler)
+{
+	samplers.insert({ slot, sampler });
+}
+
+void Material::BindTexturesAndSamplers()
+{
+	for (auto& [slot, srv] : textureSRVs)
+	{
+		Graphics::Context->PSSetShaderResources(slot, 1, srv.GetAddressOf());
+	}
+	for (auto& [slot, sampler] : samplers)
+	{
+		Graphics::Context->PSSetSamplers(slot, 1, sampler.GetAddressOf());
+	}
+}

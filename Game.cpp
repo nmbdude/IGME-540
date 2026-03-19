@@ -57,12 +57,28 @@ Game::Game()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
+	MWhite = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MWhite->AddTextureSRV(0, shaderResourceView);
+	MWhite->AddSampler(0, samplerState);
 	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MRed->AddTextureSRV(1, shaderResourceView);
+	MRed->AddSampler(1, samplerState);
 	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MGreen->AddTextureSRV(2, shaderResourceView);
+	MGreen->AddSampler(2, samplerState);
 	MBlue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	MBlue->AddTextureSRV(3, shaderResourceView);
+	MBlue->AddSampler(3, samplerState);
 	MDebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
+	MDebugNormals->AddTextureSRV(4, shaderResourceView);
+	MDebugNormals->AddSampler(4, samplerState);
 	MDebugUVs = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugUVsPS.cso");
+	MDebugUVs->AddTextureSRV(5, shaderResourceView);
+	MDebugUVs->AddSampler(5, samplerState);
 	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
+	MCustom->AddTextureSRV(6, shaderResourceView);
+	MCustom->AddSampler(6, samplerState);
+	
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -136,8 +152,8 @@ void Game::CreateGeometry()
 		meshList.push_back(MTorus);
 	}
 
-	CreateRowOfGeometry(MDebugNormals, 3.f, -7.f, 5.f);
-	CreateRowOfGeometry(MDebugUVs, 0.f, -7.f, 5.f);
+	CreateRowOfGeometry(MWhite, 3.f, -7.f, 5.f);
+	CreateRowOfGeometry(MRed, 0.f, -7.f, 5.f);
 	CreateRowOfGeometry(MCustom, -3.f, -7.f, 5.f);
 }
 
@@ -387,7 +403,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			sizeof(PixelShaderData),
 			D3D11_PIXEL_SHADER,
 			0);
-
+		
+		actor->GetMaterial()->BindTexturesAndSamplers();
 		actor->Draw();
 	}
 
