@@ -31,6 +31,16 @@ VertexShaderPtr Material::GetVertexShader() { return vertexShader; }
 PixelShaderPtr Material::GetPixelShader() { return pixelShader; }
 DirectX::XMFLOAT2 Material::GetTextureScale() { return scale; }
 DirectX::XMFLOAT2 Material::GetTextureOffset() { return offset; }
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Material::GetTextureSRV(unsigned int slot)
+{
+	return textureSRVs.count(slot) > 0 ? textureSRVs[slot] : Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>();
+}
+Microsoft::WRL::ComPtr<ID3D11SamplerState> Material::GetSampler(unsigned int slot)
+{
+	return samplers.count(slot) > 0 ? samplers[slot] : Microsoft::WRL::ComPtr<ID3D11SamplerState>();
+}
+std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> Material::GetAllTextureSRVs() { return textureSRVs; }
+std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> Material::GetAllSamplers() { return samplers; }
 // ----------------------------------------------------------------------------
 
 // SETTERS --------------------------------------------------------------------

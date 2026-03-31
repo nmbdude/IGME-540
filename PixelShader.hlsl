@@ -1,3 +1,5 @@
+#include "Common.hlsli"
+
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
@@ -7,27 +9,19 @@ cbuffer ExternalData : register(b0)
     float time;
     float2 scale;
     float2 offset;
+    float3 glowColor;
+    float glowIntensity;
+    float3 cameraPosition;
+    float padding2;
+    float3 ambientColor;
+    float padding3;
+    Light lights[5];
 }
 
 Texture2D SurfaceTexture : register(t0);
+Texture2D SpecularMap : register(t1);
 SamplerState Sampler : register(s0);
 
-// Struct representing the data we expect to receive from earlier pipeline stages
-// - Should match the output of our corresponding vertex shader
-// - The name of the struct itself is unimportant
-// - The variable names don't have to match other shaders (just the semantics)
-// - Each variable must have a semantic, which defines its usage
-struct VertexToPixel
-{
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-	float3 normal			: NORMAL;
-};
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -40,7 +34,22 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    float4 finalColor = float4(0, 0, 0, 0);
+    
+    input.normal = normalize(input.normal);
     float2 uvs = input.uv * scale + offset;
-    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs);
-    return surfaceColor * colorTint;
+    
+    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
+    float3 ambient = ambientColor * surfaceColor.rgb;
+    
+    for (int i = 0; i < 5; i++)
+    {
+        float specScale = 0.5f;
+        finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
+    }
+    
+    finalColor += float4(ambient, 0);
+    finalColor.a = 1;
+    
+    return finalColor;
 }

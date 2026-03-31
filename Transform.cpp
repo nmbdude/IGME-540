@@ -12,6 +12,7 @@ Transform::Transform() :
 	up(0, 1, 0)
 {
 	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
+	XMStoreFloat4x4(&worldInverseTransposeMatrix, XMMatrixIdentity());
 }
 
 DirectX::XMFLOAT3 Transform::GetPosition() { return position; }
@@ -29,6 +30,7 @@ DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 		XMMATRIX worldMat = sMat * rMat * tMat;
 
 		XMStoreFloat4x4(&worldMatrix, worldMat);
+		XMStoreFloat4x4(&worldInverseTransposeMatrix, XMMatrixInverse(0, XMMatrixTranspose(worldMat)));
 		dirty = false;
 	}
 	return worldMatrix;
@@ -36,18 +38,8 @@ DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 
 DirectX::XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 {
-	XMFLOAT4X4 wITM = {};
-	if(dirty)
-	{
-		XMMATRIX tMat = XMMatrixTranslationFromVector(XMLoadFloat3(&position));
-		XMMATRIX rMat = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
-		XMMATRIX sMat = XMMatrixScalingFromVector(XMLoadFloat3(&scale));
-
-		XMMATRIX worldMat = sMat * rMat * tMat;
-
-		XMStoreFloat4x4(&wITM, XMMatrixInverse(0, XMMatrixTranspose(worldMat)));
-	}
-	return wITM;
+	GetWorldMatrix();
+	return worldInverseTransposeMatrix;
 }
 
 DirectX::XMFLOAT3 Transform::GetRight()

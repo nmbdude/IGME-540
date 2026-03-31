@@ -29,6 +29,10 @@ public:
 	PixelShaderPtr GetPixelShader();
 	DirectX::XMFLOAT2 GetTextureScale();
 	DirectX::XMFLOAT2 GetTextureOffset();
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetTextureSRV(unsigned int slot);
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> GetSampler(unsigned int slot);
+	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> GetAllTextureSRVs();
+	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> GetAllSamplers();
 
 	void SetColorTint(DirectX::XMFLOAT4 colorTint);
 	void SetVertexShader(VertexShaderPtr vertexShader);

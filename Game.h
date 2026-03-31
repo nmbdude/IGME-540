@@ -12,6 +12,7 @@
 #include <memory>
 #include "Camera.h"
 #include <vector>
+#include "Lights.h"
 
 class Game
 {
@@ -54,6 +55,9 @@ private:
 	std::vector<std::shared_ptr<Actor>> actorList;
 	std::vector<std::shared_ptr<Mesh>> meshList;
 
+	DirectX::XMFLOAT3 ambientColor = { 0.1f, 0.1f, 0.25f };
+	std::vector<Light> lights;
+
 	//New Actors
 	Actor ASphere;
 	Actor AQuad;
@@ -61,6 +65,7 @@ private:
 	Actor ACylinder;
 	Actor ACube;
 
+	// Materials
 	std::shared_ptr<Material> MWood;
 	std::shared_ptr<Material> MGlowingBricks;
 	std::shared_ptr<Material> MRed;
@@ -75,6 +80,7 @@ private:
 	bool demoVisible;
 	bool rainbowMode;
 	float rainbowSpeed;
-	DirectX::XMFLOAT3 glowColor = {1.0f, 1.0f, 1.0f};
+	DirectX::XMFLOAT3 glowColor = {1.0f, 1.0f, 0.0f};
+	float glowIntensity = 1.0f;
 };
 

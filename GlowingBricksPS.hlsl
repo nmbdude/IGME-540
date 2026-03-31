@@ -1,3 +1,5 @@
+#include "Common.hlsli"
+
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
@@ -8,28 +10,12 @@ cbuffer ExternalData : register(b0)
     float2 scale;
     float2 offset;
     float3 glowColor;
+    float glowIntensity;
 }
 
 Texture2D SurfaceTexture : register(t0);
 Texture2D MaskTexture : register(t1);
 SamplerState Sampler : register(s0);
-
-// Struct representing the data we expect to receive from earlier pipeline stages
-// - Should match the output of our corresponding vertex shader
-// - The name of the struct itself is unimportant
-// - The variable names don't have to match other shaders (just the semantics)
-// - Each variable must have a semantic, which defines its usage
-struct VertexToPixel
-{
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-    float4 screenPosition : SV_POSITION;
-    float2 uv : TEXCOORD;
-    float3 normal : NORMAL;
-};
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -44,8 +30,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
     
     float2 uvs = input.uv * scale + offset;
-    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs);
+    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
     float4 maskColor = MaskTexture.Sample(Sampler, uvs);
-    maskColor *= float4(glowColor, 1.0f);
-    return surfaceColor * colorTint * maskColor;
+    float4 glow = float4(glowColor * glowIntensity, 1.0f) * maskColor.r;
+    return surfaceColor + glow;
+    //return float4(maskColor.aaa, 1.0f);
+
 }

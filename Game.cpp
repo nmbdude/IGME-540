@@ -40,6 +40,15 @@ Game::Game()
 		0,
 		woodSRV.GetAddressOf()
 	);
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodSpecularSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Specular/T_Wood_S.png").c_str(),
+		0,
+		woodSpecularSRV.GetAddressOf()
+	);
 	
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> brickSRV = {};
 	CreateWICTextureFromFile(
@@ -54,9 +63,9 @@ Game::Game()
 	CreateWICTextureFromFile(
 		Graphics::Device.Get(),
 		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures/Diffuse/T_BrickMask_D.jpg").c_str(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_BrickMask_D.png").c_str(),
 		0,
-		brickSRV.GetAddressOf()
+		glowSRV.GetAddressOf()
 	);
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
@@ -71,6 +80,7 @@ Game::Game()
 
 	MWood = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MWood->AddTextureSRV(0, woodSRV);
+	MWood->AddTextureSRV(1, woodSpecularSRV);
 	MWood->AddSampler(0, samplerState);
 
 	MGlowingBricks = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"GlowingBricksPS.cso");
@@ -80,14 +90,17 @@ Game::Game()
 
 	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MRed->AddTextureSRV(0, brickSRV);
+	MRed->AddTextureSRV(1, woodSpecularSRV);
 	MRed->AddSampler(0, samplerState);
 
 	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MGreen->AddTextureSRV(0, woodSRV);
+	MGreen->AddTextureSRV(1, woodSpecularSRV);
 	MGreen->AddSampler(0, samplerState);
 
 	MBlue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MBlue->AddTextureSRV(0, brickSRV);
+	MBlue->AddTextureSRV(1, woodSpecularSRV);
 	MBlue->AddSampler(0, samplerState);
 
 	MDebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
@@ -101,6 +114,43 @@ Game::Game()
 	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
 	MCustom->AddTextureSRV(0, woodSRV);
 	MCustom->AddSampler(0, samplerState);
+
+	// Lights -------------------------------------------------------------
+	
+	// Directional Light
+	Light directionalLight1 = {};
+	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight1.intensity = 1.0f;
+	lights.push_back(directionalLight1);
+	Light directionalLight2 = {};
+	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight2.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight2.intensity = 1.0f;
+	lights.push_back(directionalLight2);
+	Light directionalLight3 = {};
+	directionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight3.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight3.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight3.intensity = 1.0f;
+	lights.push_back(directionalLight3);
+	Light directionalLight4 = {};
+	directionalLight4.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight4.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight4.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight4.intensity = 1.0f;
+	lights.push_back(directionalLight4);
+	Light directionalLight5 = {};
+	directionalLight5.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight5.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight5.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight5.intensity = 1.0f;
+	lights.push_back(directionalLight5);
+
+
+	// --------------------------------------------------------------------
 	
 
 	// Initialize ImGui itself & platform/renderer backends
@@ -204,40 +254,61 @@ void Game::NewFrame(float deltaTime)
 void Game::CreateRowOfGeometry(std::shared_ptr<Material> material, float y, float xOffset, float zOffset)
 {
 	int randomID = rand() % 1000;
-	Actor cube = Actor(meshList[4], material, "Cube##" + std::to_string(randomID));
-	cube.GetTransform()->SetPosition(XMFLOAT3{ 0.f + xOffset, y, 0.f + zOffset });
-	cube.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(cube));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor cube = Actor(meshList[4], mat, "Cube##" + std::to_string(randomID));
+		cube.GetTransform()->SetPosition(XMFLOAT3{ 0.f + xOffset, y, 0.f + zOffset });
+		cube.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(cube));
+	}
 
-	Actor cylinder = Actor(meshList[2], material, "Cylinder##" + std::to_string(randomID));
-	cylinder.GetTransform()->SetPosition(XMFLOAT3{ 3.f + xOffset, y, 0.f + zOffset });
-	cylinder.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(cylinder));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor cylinder = Actor(meshList[2], mat, "Cylinder##" + std::to_string(randomID));
+		cylinder.GetTransform()->SetPosition(XMFLOAT3{ 3.f + xOffset, y, 0.f + zOffset });
+		cylinder.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(cylinder));
+	}
 
-	Actor helix = Actor(meshList[3], material, "Helix##" + std::to_string(randomID));
-	helix.GetTransform()->SetPosition(XMFLOAT3{ 6.f + xOffset, y, 0.f + zOffset });
-	helix.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(helix));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor helix = Actor(meshList[3], mat, "Helix##" + std::to_string(randomID));
+		helix.GetTransform()->SetPosition(XMFLOAT3{ 6.f + xOffset, y, 0.f + zOffset });
+		helix.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(helix));
+	}
 
-	Actor sphere = Actor(meshList[0], material, "Sphere##" + std::to_string(randomID));
-	sphere.GetTransform()->SetPosition(XMFLOAT3{ 9.f + xOffset, y, 0.f + zOffset });
-	sphere.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(sphere));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor sphere = Actor(meshList[0], mat, "Sphere##" + std::to_string(randomID));
+		sphere.GetTransform()->SetPosition(XMFLOAT3{ 9.f + xOffset, y, 0.f + zOffset });
+		sphere.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(sphere));
+	}
 
-	Actor torus = Actor(meshList[5], material, "Torus##" + std::to_string(randomID));
-	torus.GetTransform()->SetPosition(XMFLOAT3{ 12.f + xOffset, y, 0.f + zOffset });
-	torus.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(torus));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor torus = Actor(meshList[5], mat, "Torus##" + std::to_string(randomID));
+		torus.GetTransform()->SetPosition(XMFLOAT3{ 12.f + xOffset, y, 0.f + zOffset });
+	 torus.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(torus));
+	}
 
-	Actor quad = Actor(meshList[1], material, "Quad##" + std::to_string(randomID));
-	quad.GetTransform()->SetPosition(XMFLOAT3{ 15.f + xOffset, y, 0.f + zOffset });
-	quad.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(quad));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor quad = Actor(meshList[1], mat, "Quad##" + std::to_string(randomID));
+		quad.GetTransform()->SetPosition(XMFLOAT3{ 15.f + xOffset, y, 0.f + zOffset });
+		quad.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(quad));
+	}
 
-	Actor quad2 = Actor(meshList[1], material, "Quad2##" + std::to_string(randomID));
-	quad2.GetTransform()->SetPosition(XMFLOAT3{ 18.f + xOffset, y, 0.f + zOffset });
-	quad2.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
-	actorList.push_back(std::make_shared<Actor>(quad2));
+	{
+		std::shared_ptr<Material> mat = std::make_shared<Material>(*material);
+		Actor quad2 = Actor(meshList[1], mat, "Quad2##" + std::to_string(randomID));
+		quad2.GetTransform()->SetPosition(XMFLOAT3{ 18.f + xOffset, y, 0.f + zOffset });
+		quad2.GetTransform()->SetRotation(0.f, XMConvertToRadians(90.f), 0.f);
+		actorList.push_back(std::make_shared<Actor>(quad2));
+	}
 }
 
 
@@ -312,26 +383,54 @@ void Game::Update(float deltaTime, float totalTime)
 			std::string label = actor->GetName().c_str() + std::to_string(count);
 			if (ImGui::TreeNode(label.c_str()))
 			{
-				XMFLOAT3 position = actor->GetTransform()->GetPosition();
-				XMFLOAT3 rotation = actor->GetTransform()->GetPitchYawRoll();
-				XMFLOAT3 scale = actor->GetTransform()->GetScale();
-				std::string posLabel = "Position##" + actor->GetName() + std::to_string(count);
-				std::string rotLabel = "Rotation##" + actor->GetName() + std::to_string(count);
-				std::string scaleLabel = "Scale##" + actor->GetName() + std::to_string(count);
+				if(ImGui::TreeNode("Transform"))
+				{
+					XMFLOAT3 position = actor->GetTransform()->GetPosition();
+					XMFLOAT3 rotation = actor->GetTransform()->GetPitchYawRoll();
+					XMFLOAT3 scale = actor->GetTransform()->GetScale();
+					std::string posLabel = "Position##" + actor->GetName() + std::to_string(count);
+					std::string rotLabel = "Rotation##" + actor->GetName() + std::to_string(count);
+					std::string scaleLabel = "Scale##" + actor->GetName() + std::to_string(count);
 
-				ImGui::Text("Mesh: %s", actor->GetMesh()->GetName().c_str());
+					ImGui::Text("Mesh: %s", actor->GetMesh()->GetName().c_str());
 
-				if (ImGui::DragFloat3(posLabel.c_str(), (float*)&position, 0.01f))
-				{
-					actor->GetTransform()->SetPosition(position);
+					if (ImGui::DragFloat3(posLabel.c_str(), (float*)&position, 0.01f))
+					{
+						actor->GetTransform()->SetPosition(position);
+					}
+					if (ImGui::DragFloat3(rotLabel.c_str(), (float*)&rotation, 0.01f))
+					{
+						actor->GetTransform()->SetRotation(rotation);
+					}
+					if (ImGui::DragFloat3(scaleLabel.c_str(), (float*)&scale, 0.01f))
+					{
+						actor->GetTransform()->SetScale(scale);
+					}
+					ImGui::TreePop();
 				}
-				if (ImGui::DragFloat3(rotLabel.c_str(), (float*)&rotation, 0.01f))
+				if (ImGui::TreeNode("Material"))
 				{
-					actor->GetTransform()->SetRotation(rotation);
-				}
-				if (ImGui::DragFloat3(scaleLabel.c_str(), (float*)&scale, 0.01f))
-				{
-					actor->GetTransform()->SetScale(scale);
+					XMFLOAT4 colorTint = actor->GetMaterial()->GetColorTint();
+					XMFLOAT2 textureScale = actor->GetMaterial()->GetTextureScale();
+					XMFLOAT2 textureOffset = actor->GetMaterial()->GetTextureOffset();
+					std::string colorLabel = "Color Tint##" + actor->GetName() + std::to_string(count);
+					if (ImGui::ColorEdit4(colorLabel.c_str(), (float*)&colorTint))
+					{
+						actor->GetMaterial()->SetColorTint(colorTint);
+					}
+					if (ImGui::DragFloat2("Texture Scale", (float*)&textureScale, 0.01f))
+					{
+						actor->GetMaterial()->SetTextureScale(textureScale);
+					}
+					if (ImGui::DragFloat2("Texture Offset", (float*)&textureOffset, 0.01f))
+					{
+						actor->GetMaterial()->SetOffset(textureOffset);
+					}
+					for (auto& [slot, srv] : actor->GetMaterial()->GetAllTextureSRVs())
+					{
+						ImGui::Image(static_cast<void*>(srv.Get()), ImVec2(256, 256));
+					}
+					ImGui::TreePop();
 				}
 				count++;
 				ImGui::TreePop();
@@ -339,6 +438,31 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 		ImGui::TreePop();
 	}
+	if (ImGui::TreeNode("Lights"))
+	{
+		ImGui::Text("Light Count: %d", lights.size());
+		int count = 1;
+		for (Light& light : lights)
+		{
+			std::string label = "Light " + std::to_string(count);
+			if (ImGui::TreeNode(label.c_str()))
+			{
+				std::string typeLabel = "Type##" + std::to_string(count);
+				std::string intensityLabel = "Intensity##" + std::to_string(count);
+				ImGui::Text("Type: %s", light.Type == LIGHT_TYPE_DIRECTIONAL ? "Directional" : light.Type == LIGHT_TYPE_POINT ? "Point" : "Spot");
+				ImGui::ColorEdit3("Color", (float*)&light.Color);
+				if (light.Type == LIGHT_TYPE_DIRECTIONAL)
+				{
+					ImGui::DragFloat3("Direction", (float*)&light.Direction, 0.01f);
+				}
+				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 5.f);
+				ImGui::TreePop();
+			}
+			count++;
+		}
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNode("Meshes"))
 	{
 		for (int i = 0; i < meshList.size(); i++)
@@ -370,6 +494,8 @@ void Game::Update(float deltaTime, float totalTime)
 		{
 			ImGui::ColorEdit4("Background Color", backgroundColor);
 		}
+		ImGui::ColorEdit3("Glow Color", (float*)&glowColor);
+		ImGui::DragFloat("Glow Intensity", &glowIntensity, 0.01f, 0.f, 5.f);
 		//ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
 		ImGui::TreePop();
 	}
@@ -410,6 +536,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		vsData.matrix = actor->GetTransform()->GetWorldMatrix();
 		vsData.view = activeCamera->GetViewMatrix();
 		vsData.projection = activeCamera->GetProjectionMatrix();
+		vsData.worldInverseTranspose = actor->GetTransform()->GetWorldInverseTransposeMatrix();
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&vsData,
@@ -423,6 +550,10 @@ void Game::Draw(float deltaTime, float totalTime)
 		psData.scale = actor->GetMaterial()->GetTextureScale();
 		psData.offset = actor->GetMaterial()->GetTextureOffset();
 		psData.glowColor = glowColor;
+		psData.glowIntensity = glowIntensity;
+		psData.cameraPosition = activeCamera->GetTransform().GetPosition();
+		psData.ambientColor = ambientColor;
+		memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&psData,
