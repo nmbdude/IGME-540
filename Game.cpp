@@ -124,29 +124,33 @@ Game::Game()
 	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
 	directionalLight1.intensity = 1.0f;
 	lights.push_back(directionalLight1);
+
 	Light directionalLight2 = {};
 	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight2.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight2.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight2.Direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	directionalLight2.Color = XMFLOAT3(1.0, 0.0, 0.0);
 	directionalLight2.intensity = 1.0f;
 	lights.push_back(directionalLight2);
+
 	Light directionalLight3 = {};
 	directionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight3.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight3.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	directionalLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	directionalLight3.Color = XMFLOAT3(0.0, 1.0, 0.0);
 	directionalLight3.intensity = 1.0f;
 	lights.push_back(directionalLight3);
+
 	Light directionalLight4 = {};
 	directionalLight4.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight4.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight4.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	directionalLight4.intensity = 1.0f;
+	directionalLight4.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	directionalLight4.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	directionalLight4.intensity = 3.0f;
 	lights.push_back(directionalLight4);
+
 	Light directionalLight5 = {};
-	directionalLight5.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight5.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	directionalLight5.Type = LIGHT_TYPE_POINT;
+	directionalLight5.Position = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	directionalLight5.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	directionalLight5.intensity = 1.0f;
+	directionalLight5.intensity = 10.0f;
 	lights.push_back(directionalLight5);
 
 

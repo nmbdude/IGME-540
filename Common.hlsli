@@ -65,4 +65,12 @@ float3 CalculateDirectionalLight(Light light, float3 normal, float3 worldPos, fl
     return diffuse + specular;
 }
 
+float3 CalculatePointLight(Light light, float3 normal, float3 pos, float3 surfacePos, float3 surfaceColor, float3 cameraPos, float specScale)
+{
+    float3 direction = surfacePos - pos;
+    float3 diffuse = DiffuseColor(light, normal) * surfaceColor;
+    float3 specular = SpecularTerm(light, normal, pos, cameraPos, specScale);
+    return diffuse + specular;
+}
+
 #endif
