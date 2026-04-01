@@ -139,19 +139,24 @@ Game::Game()
 	directionalLight3.intensity = 1.0f;
 	lights.push_back(directionalLight3);
 
-	Light directionalLight4 = {};
-	directionalLight4.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight4.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	directionalLight4.Color = XMFLOAT3(0.0, 0.0, 1.0);
-	directionalLight4.intensity = 3.0f;
-	lights.push_back(directionalLight4);
+	Light spotLight1 = {};
+	spotLight1.Type = LIGHT_TYPE_SPOT;
+	spotLight1.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	spotLight1.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	spotLight1.Range = 10.0f;
+	spotLight1.SpotInnerAngle = 20.0f;
+	spotLight1.SpotOuterAngle = 50.0f;
+	spotLight1.intensity = 3.0f;
+	lights.push_back(spotLight1);
 
-	Light directionalLight5 = {};
-	directionalLight5.Type = LIGHT_TYPE_POINT;
-	directionalLight5.Position = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	directionalLight5.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	directionalLight5.intensity = 10.0f;
-	lights.push_back(directionalLight5);
+	Light pointLight1 = {};
+	pointLight1.Type = LIGHT_TYPE_POINT;
+	pointLight1.Position = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	pointLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
+	pointLight1.intensity = 1.0f;
+	pointLight1.Range = 10.0f;
+
+	lights.push_back(pointLight1);
 
 
 	// --------------------------------------------------------------------
@@ -459,6 +464,17 @@ void Game::Update(float deltaTime, float totalTime)
 				{
 					ImGui::DragFloat3("Direction", (float*)&light.Direction, 0.01f);
 				}
+				else if (light.Type == LIGHT_TYPE_POINT)
+				{
+					ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f);
+				}
+				else if (light.Type == LIGHT_TYPE_SPOT)
+				{
+					ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f);
+					ImGui::DragFloat3("Direction", (float*)&light.Direction, 0.01f);
+					ImGui::DragFloat("Inner Angle", &light.SpotInnerAngle, 0.1f, 0.f, 180.f);
+					ImGui::DragFloat("Outer Angle", &light.SpotOuterAngle, 0.1f, 0.f, 180.f);
+				}
 				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 5.f);
 				ImGui::TreePop();
 			}
@@ -467,20 +483,20 @@ void Game::Update(float deltaTime, float totalTime)
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Meshes"))
-	{
-		for (int i = 0; i < meshList.size(); i++)
-		{
-			if (ImGui::TreeNode("Mesh: Sphere"))
-			{
-				ImGui::Text("Triangles: %d", ASphere.GetMesh()->GetTriangleCount());
-				ImGui::Text("Vertices: %d", ASphere.GetMesh()->GetVertexCount());
-				ImGui::Text("Indices: %d", ASphere.GetMesh()->GetIndexCount());
-				ImGui::TreePop();
-			}
-		}
-		ImGui::TreePop();
-	}
+	//if (ImGui::TreeNode("Meshes"))
+	//{
+	//	for (int i = 0; i < meshList.size(); i++)
+	//	{
+	//		if (ImGui::TreeNode("Mesh: Sphere"))
+	//		{
+	//			ImGui::Text("Triangles: %d", ASphere.GetMesh()->GetTriangleCount());
+	//			ImGui::Text("Vertices: %d", ASphere.GetMesh()->GetVertexCount());
+	//			ImGui::Text("Indices: %d", ASphere.GetMesh()->GetIndexCount());
+	//			ImGui::TreePop();
+	//		}
+	//	}
+	//	ImGui::TreePop();
+	//}
 	if(ImGui::TreeNode("Customization"))
 	{
 		ImGui::Checkbox("Rainbow Mode", &rainbowMode);

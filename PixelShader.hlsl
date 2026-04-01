@@ -47,9 +47,9 @@ float4 main(VertexToPixel input) : SV_TARGET
     {
         finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
     }
-    
-    return float4(lights[4].Color, 1);
-    finalColor += (CalculatePointLight(lights[4], input.normal, lights[4].Position, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
     
     finalColor += float4(ambient, 0);
     finalColor.a = 1;

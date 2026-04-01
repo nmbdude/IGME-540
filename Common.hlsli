@@ -33,6 +33,13 @@ struct Light
     float2 Padding;
 };
 
+float Attenuate(Light light, float3 worldPos)
+{
+    float dist = distance(light.Position, worldPos);
+    float att = saturate(1.0f - (dist * dist / (light.Range * light.Range)));
+    return att * att;
+}
+
 float3 NormalizedDirection(Light light, float3 worldPosition)
 {
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
@@ -45,32 +52,45 @@ float3 NormalizedDirection(Light light, float3 worldPosition)
     }
 }
 
-float3 DiffuseColor(Light light, float3 normal)
+float3 DiffuseColor(Light light, float3 normal, float3 direction)
 {
-    return saturate(dot(normal, -light.Direction)) * light.Color * light.intensity;
+    return saturate(dot(normal, -direction)) * light.Color * light.intensity;
 }
 
-float3 SpecularTerm(Light light, float3 normal, float3 worldPos, float3 cameraPos, float specScale)
+float3 SpecularTerm(Light light, float3 normal, float3 worldPos, float3 cameraPos, float specScale, float3 direction)
 {
     float3 directionToCamera = normalize(cameraPos - worldPos);
-    float3 reflectDir = reflect(light.Direction, normal);
+    float3 reflectDir = reflect(direction, normal);
     float RdotV = saturate(dot(reflectDir, directionToCamera));
     return pow(RdotV, 64.0f) * specScale * light.intensity * light.Color;
 }
 
 float3 CalculateDirectionalLight(Light light, float3 normal, float3 worldPos, float3 cameraPos, float3 surfaceColor, float specScale)
 {
-    float3 diffuse = DiffuseColor(light, normal) * surfaceColor;
-    float3 specular = SpecularTerm(light, normal, worldPos, cameraPos, specScale) * surfaceColor;
+    float3 diffuse = DiffuseColor(light, normal, light.Direction) * surfaceColor;
+    float3 specular = SpecularTerm(light, normal, worldPos, cameraPos, specScale, light.Direction) * surfaceColor;
     return diffuse + specular;
 }
 
-float3 CalculatePointLight(Light light, float3 normal, float3 pos, float3 surfacePos, float3 surfaceColor, float3 cameraPos, float specScale)
+float3 CalculatePointLight(Light light, float3 normal, float3 worldPos, float3 surfaceColor, float3 cameraPos, float specScale)
 {
-    float3 direction = surfacePos - pos;
-    float3 diffuse = DiffuseColor(light, normal) * surfaceColor;
-    float3 specular = SpecularTerm(light, normal, pos, cameraPos, specScale);
-    return diffuse + specular;
+    float3 direction = NormalizedDirection(light, worldPos);
+    float specular = SpecularTerm(light, normal, worldPos, cameraPos, specScale, direction);
+    float3 diffuse = DiffuseColor(light, normal, direction) * surfaceColor;
+    return (diffuse + specular) * Attenuate(light, worldPos);
+}
+
+float3 CalculateSpotLight(Light light, float3 normal, float3 worldPos, float3 surfaceColor, float3 cameraPos, float specScale)
+{
+    float pixelAngle = saturate(dot(-NormalizedDirection(light, worldPos), light.Direction));
+    
+    float cosOuter = cos(light.SpotOuterAngle);
+    float cosInner = cos(light.SpotInnerAngle);
+    float falloffRange = cosOuter - cosInner;
+    
+    float spotTerm = saturate((cosOuter - pixelAngle) / falloffRange);
+    float3 finalColor = CalculatePointLight(light, normal, worldPos, surfaceColor, cameraPos, specScale) * spotTerm;
+    return finalColor;
 }
 
 #endif
