@@ -451,6 +451,7 @@ void Game::Update(float deltaTime, float totalTime)
 	{
 		ImGui::Text("Light Count: %d", lights.size());
 		int count = 1;
+		ImGui::ColorEdit3("Ambient Color", (float*)&ambientColor);
 		for (Light& light : lights)
 		{
 			std::string label = "Light " + std::to_string(count);
@@ -587,7 +588,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	// ImGui Render
 	{
-		ImGui::Render(); // Turns this frame’s UI into renderable triangles
+		ImGui::Render(); // Turns this frameÂ’s UI into renderable triangles
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
 	}
 
