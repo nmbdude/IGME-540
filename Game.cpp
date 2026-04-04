@@ -117,43 +117,46 @@ Game::Game()
 
 	// Lights -------------------------------------------------------------
 	
-	// Directional Light
+	// Yellow Directional Light
 	Light directionalLight1 = {};
 	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	directionalLight1.intensity = 1.0f;
+	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 0.0);
+	directionalLight1.intensity = 5.0f;
 	lights.push_back(directionalLight1);
 
+	// Red Directional Light
 	Light directionalLight2 = {};
 	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.Direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	directionalLight2.Color = XMFLOAT3(1.0, 0.0, 0.0);
-	directionalLight2.intensity = 1.0f;
+	directionalLight2.intensity = 5.0f;
 	lights.push_back(directionalLight2);
 
+	// Blue Directional Light
 	Light directionalLight3 = {};
 	directionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	directionalLight3.Color = XMFLOAT3(0.0, 1.0, 0.0);
-	directionalLight3.intensity = 1.0f;
+	directionalLight3.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	directionalLight3.intensity = 20.0f;
 	lights.push_back(directionalLight3);
 
 	Light spotLight1 = {};
 	spotLight1.Type = LIGHT_TYPE_SPOT;
-	spotLight1.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	spotLight1.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	spotLight1.Position = XMFLOAT3(11.0f, 5.0f, 5.0f);
+	spotLight1.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	spotLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
 	spotLight1.Range = 10.0f;
-	spotLight1.SpotInnerAngle = 20.0f;
-	spotLight1.SpotOuterAngle = 50.0f;
+	spotLight1.SpotInnerAngle = 3.0f;
+	spotLight1.SpotOuterAngle = 20.0f;
 	spotLight1.intensity = 3.0f;
 	lights.push_back(spotLight1);
 
 	Light pointLight1 = {};
 	pointLight1.Type = LIGHT_TYPE_POINT;
-	pointLight1.Position = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	pointLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	pointLight1.intensity = 1.0f;
+	pointLight1.Position = XMFLOAT3(5.0f, 6.0f, 4.0f);
+	pointLight1.Color = XMFLOAT3(0.0, 1.0, 0.0);
+	pointLight1.intensity = 5.0f;
 	pointLight1.Range = 10.0f;
 
 	lights.push_back(pointLight1);
@@ -449,9 +452,9 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 	if (ImGui::TreeNode("Lights"))
 	{
-		ImGui::Text("Light Count: %d", lights.size());
+		ImGui::ColorEdit3("Ambient Color", (float*)&ambientColor); 
+;		ImGui::Text("Light Count: %d", lights.size());
 		int count = 1;
-		ImGui::ColorEdit3("Ambient Color", (float*)&ambientColor);
 		for (Light& light : lights)
 		{
 			std::string label = "Light " + std::to_string(count);
@@ -468,6 +471,7 @@ void Game::Update(float deltaTime, float totalTime)
 				else if (light.Type == LIGHT_TYPE_POINT)
 				{
 					ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f);
+					ImGui::DragFloat("Range", (float*)&light.Range, 0.01f);
 				}
 				else if (light.Type == LIGHT_TYPE_SPOT)
 				{
@@ -476,7 +480,7 @@ void Game::Update(float deltaTime, float totalTime)
 					ImGui::DragFloat("Inner Angle", &light.SpotInnerAngle, 0.1f, 0.f, 180.f);
 					ImGui::DragFloat("Outer Angle", &light.SpotOuterAngle, 0.1f, 0.f, 180.f);
 				}
-				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 5.f);
+				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 100.f);
 				ImGui::TreePop();
 			}
 			count++;
@@ -588,7 +592,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	// ImGui Render
 	{
-		ImGui::Render(); // Turns this frameÂ’s UI into renderable triangles
+		ImGui::Render(); // Turns this frame’s UI into renderable triangles
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
 	}
 
