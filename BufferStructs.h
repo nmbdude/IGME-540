@@ -1,4 +1,5 @@
 #pragma once
+#define MAX_LIGHTS 128
 
 #include <DirectXMath.h>
 #include "Lights.h"
@@ -10,6 +11,7 @@ struct VertexShaderData
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;
 	DirectX::XMFLOAT4X4 worldInverseTranspose;
+	DirectX::XMFLOAT3 tangent;
 };
 
 struct PixelShaderData
@@ -27,5 +29,12 @@ struct PixelShaderData
 	float padding2;
 	DirectX::XMFLOAT3 ambientColor;
 	float padding3;
-	Light lights[5];
+	Light lights[MAX_LIGHTS];
+	int lightCount;
+};
+
+struct SkyShaderData
+{
+	DirectX::XMFLOAT4X4 view;
+	DirectX::XMFLOAT4X4 projection;
 };

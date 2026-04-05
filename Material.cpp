@@ -86,10 +86,9 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input!
 	inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
-	// Set up the second element - a color, which is 4 more float values
-	inputElements[3].Format = DXGI_FORMAT_R32_FLOAT;			// 3x 32-bit floats
-	inputElements[3].SemanticName = "TIME";							// Match our vertex shader input!
-	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
+	inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElements[3].SemanticName = "TANGENT";
+	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 
 	// Create the input layout, verifying our description against actual shader code
 	Graphics::Device->CreateInputLayout(

@@ -15,7 +15,8 @@ cbuffer ExternalData : register(b0)
     float padding2;
     float3 ambientColor;
     float padding3;
-    Light lights[5];
+    Light lights[MAX_LIGHTS];
+    int lightCount;
 }
 
 Texture2D SurfaceTexture : register(t0);
@@ -34,25 +35,6 @@ SamplerState Sampler : register(s0);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-    float4 finalColor = float4(0, 0, 0, 0);
-    
-    input.normal = normalize(input.normal);
-    float2 uvs = input.uv * scale + offset;
-    
-    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
-    float3 ambient = ambientColor * surfaceColor.rgb;
-    float specScale = 0.5f;
-    
-    for (int i = 0; i < 3; i++)
-    {
-        finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
-    }
-    finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    //return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    
-    finalColor += float4(ambient, 0);
-    finalColor.a = 1;
-    
-    return finalColor;
+    return CalculateLights(input, lights, lightCount, SurfaceTexture, Sampler, 
+    colorTint, ambientColor, scale, offset, cameraPosition);
 }

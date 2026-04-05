@@ -13,6 +13,7 @@
 #include "Camera.h"
 #include <vector>
 #include "Lights.h"
+#include "Sky.h"
 
 class Game
 {
@@ -55,8 +56,10 @@ private:
 	std::vector<std::shared_ptr<Actor>> actorList;
 	std::vector<std::shared_ptr<Mesh>> meshList;
 
-	DirectX::XMFLOAT3 ambientColor = { 0.1f, 0.1f, 0.25f };
+	DirectX::XMFLOAT3 ambientColor = { 0.276f, 0.276f, 0.569f };
 	std::vector<Light> lights;
+
+	std::shared_ptr<Sky> sky;
 
 	//New Actors
 	Actor ASphere;
@@ -74,6 +77,7 @@ private:
 	std::shared_ptr<Material> MDebugNormals;
 	std::shared_ptr<Material> MDebugUVs;
 	std::shared_ptr<Material> MCustom;
+	std::shared_ptr<Material> MStone;
 
 	// User controls
 	float backgroundColor[4];

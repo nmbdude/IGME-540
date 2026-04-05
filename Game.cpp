@@ -41,6 +41,24 @@ Game::Game()
 		woodSRV.GetAddressOf()
 	);
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_Stone_D.jpg").c_str(),
+		0,
+		stoneSRV.GetAddressOf()
+	);
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneNormalsSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Normal/T_Stone_N.png").c_str(),
+		0,
+		stoneNormalsSRV.GetAddressOf()
+	);
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodSpecularSRV = {};
 	CreateWICTextureFromFile(
 		Graphics::Device.Get(),
@@ -82,6 +100,11 @@ Game::Game()
 	MWood->AddTextureSRV(0, woodSRV);
 	MWood->AddTextureSRV(1, woodSpecularSRV);
 	MWood->AddSampler(0, samplerState);
+
+	MStone = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"NormalMapVS.cso", L"NormalMapPS.cso");
+	MStone->AddTextureSRV(0, stoneSRV);
+	MStone->AddTextureSRV(1, stoneNormalsSRV);
+	MStone->AddSampler(0, samplerState);
 
 	MGlowingBricks = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"GlowingBricksPS.cso");
 	MGlowingBricks->AddTextureSRV(0, brickSRV);
@@ -163,7 +186,6 @@ Game::Game()
 
 
 	// --------------------------------------------------------------------
-	
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -197,6 +219,19 @@ Game::Game()
 	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
 
 	CreateGeometry();
+
+
+	sky = std::make_shared<Sky>(meshList[4], samplerState);
+	sky->CreateCubemap(
+		FixPath(L"../../Assets/Textures/Skybox/right.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/left.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/up.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/down.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/front.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/back.png").c_str()
+	);
+	sky->SetVertexShaderFromFile(L"SkyVS.cso");
+	sky->SetPixelShaderFromFile(L"SkyPS.cso");
 }
 
 
@@ -238,8 +273,8 @@ void Game::CreateGeometry()
 	}
 
 	CreateRowOfGeometry(MWood, 3.f, -7.f, 5.f);
-	CreateRowOfGeometry(MGlowingBricks, 0.f, -7.f, 5.f);
-	CreateRowOfGeometry(MCustom, -3.f, -7.f, 5.f);
+	CreateRowOfGeometry(MStone, 0.f, -7.f, 5.f);
+	CreateRowOfGeometry(MGlowingBricks, -3.f, -7.f, 5.f);
 }
 
 void Game::NewFrame(float deltaTime)
@@ -579,6 +614,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		psData.cameraPosition = activeCamera->GetTransform().GetPosition();
 		psData.ambientColor = ambientColor;
 		memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
+		psData.lightCount = (int)lights.size();
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&psData,
@@ -589,6 +625,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		actor->GetMaterial()->BindTexturesAndSamplers();
 		actor->Draw();
 	}
+
+	sky->Draw(*activeCamera.get());
 
 	// ImGui Render
 	{
