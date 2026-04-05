@@ -1,29 +1,35 @@
 #include "Material.h"
 #include "PathHelpers.h"
 #include "Graphics.h"
+#include "Sky.h"
 #include <d3dcompiler.h>
 
 using namespace DirectX;
 
 Material::Material() : Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), VertexShaderPtr(), PixelShaderPtr()) {}
 
-Material::Material(DirectX::XMFLOAT4 colorTint) : Material(colorTint, VertexShaderPtr(), PixelShaderPtr()) {}
+Material::Material(DirectX::XMFLOAT4 colorTint) 
+	: Material(colorTint, VertexShaderPtr(), PixelShaderPtr()) {}
 
 Material::Material(const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath)
 	: colorTint(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))
 {
 	CreateVertShaderFromFile(vertexShaderFilePath);
 	CreatePixelShaderFromFile(pixelShaderFilePath);
+	AddTextureSRV(100, Sky::GetSkySRV());
 }
 
-Material::Material(DirectX::XMFLOAT4 colorTint, const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath) :
-	Material(vertexShaderFilePath, pixelShaderFilePath)
+Material::Material(DirectX::XMFLOAT4 colorTint, const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath) 
+	: Material(vertexShaderFilePath, pixelShaderFilePath)
 {
 	this->colorTint = colorTint;
 }
 
 Material::Material(DirectX::XMFLOAT4 colorTint, VertexShaderPtr vertexShader, PixelShaderPtr pixelShader)
-	: colorTint(colorTint), vertexShader(vertexShader), pixelShader(pixelShader){}
+	: colorTint(colorTint), vertexShader(vertexShader), pixelShader(pixelShader)
+{
+	AddTextureSRV(100, Sky::GetSkySRV());
+}
 
 // GETTERS --------------------------------------------------------------------
 DirectX::XMFLOAT4 Material::GetColorTint() { return colorTint; }

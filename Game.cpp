@@ -96,6 +96,35 @@ Game::Game()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
+	{
+		std::shared_ptr<Mesh> MSphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
+		std::shared_ptr<Mesh> MQuad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
+		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
+		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
+		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
+		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
+
+		meshList.push_back(MSphere);
+		meshList.push_back(MQuad);
+		meshList.push_back(MCylinder);
+		meshList.push_back(MHelix);
+		meshList.push_back(MCube);
+		meshList.push_back(MTorus);
+	}
+	
+	sky = std::make_shared<Sky>(meshList[4], samplerState);
+	skySRV = sky->CreateCubemap(
+		FixPath(L"../../Assets/Textures/Skybox/right.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/left.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/up.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/down.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/front.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/back.png").c_str()
+	);
+	sky->SetVertexShaderFromFile(L"SkyVS.cso");
+	sky->SetPixelShaderFromFile(L"SkyPS.cso");
+
+
 	MWood = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
 	MWood->AddTextureSRV(0, woodSRV);
 	MWood->AddTextureSRV(1, woodSpecularSRV);
@@ -137,6 +166,10 @@ Game::Game()
 	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
 	MCustom->AddTextureSRV(0, woodSRV);
 	MCustom->AddSampler(0, samplerState);
+
+	CreateGeometry();
+
+	
 
 	// Lights -------------------------------------------------------------
 	
@@ -218,20 +251,7 @@ Game::Game()
 	rainbowSpeed = 1.0f;
 	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
 
-	CreateGeometry();
-
-
-	sky = std::make_shared<Sky>(meshList[4], samplerState);
-	sky->CreateCubemap(
-		FixPath(L"../../Assets/Textures/Skybox/right.png").c_str(),
-		FixPath(L"../../Assets/Textures/Skybox/left.png").c_str(),
-		FixPath(L"../../Assets/Textures/Skybox/up.png").c_str(),
-		FixPath(L"../../Assets/Textures/Skybox/down.png").c_str(),
-		FixPath(L"../../Assets/Textures/Skybox/front.png").c_str(),
-		FixPath(L"../../Assets/Textures/Skybox/back.png").c_str()
-	);
-	sky->SetVertexShaderFromFile(L"SkyVS.cso");
-	sky->SetPixelShaderFromFile(L"SkyPS.cso");
+	
 }
 
 
@@ -256,21 +276,7 @@ Game::~Game()
 void Game::CreateGeometry()
 {
 	//Custom Meshes
-	{
-		std::shared_ptr<Mesh> MSphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
-		std::shared_ptr<Mesh> MQuad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
-		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
-		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
-		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
-		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
-
-		meshList.push_back(MSphere);
-		meshList.push_back(MQuad);
-		meshList.push_back(MCylinder);
-		meshList.push_back(MHelix);
-		meshList.push_back(MCube);
-		meshList.push_back(MTorus);
-	}
+	
 
 	CreateRowOfGeometry(MWood, 3.f, -7.f, 5.f);
 	CreateRowOfGeometry(MStone, 0.f, -7.f, 5.f);

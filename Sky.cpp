@@ -4,11 +4,12 @@
 
 using namespace DirectX;
 
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Sky::skySRV = {};
+
 Sky::Sky(std::shared_ptr<Mesh> mesh, ComPtr<ID3D11SamplerState> samplerState)
 {
 	this->mesh = mesh;
 	this->samplerState = samplerState;
-	skySRV = ComPtr<ID3D11ShaderResourceView>{};
 	depthStencilState = ComPtr<ID3D11DepthStencilState>{};
 	rasterizerState = ComPtr<ID3D11RasterizerState>{};
 	pixelShader = PixelShaderPtr{};
@@ -197,8 +198,6 @@ void Sky::Draw(Camera camera)
 	Graphics::Context->RSSetState(rasterizerState.Get());
 	Graphics::Context->OMSetDepthStencilState(depthStencilState.Get(), 0);
 
-	
-
 	Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 	Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	Graphics::Context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
@@ -217,4 +216,9 @@ void Sky::Draw(Camera camera)
 
 	Graphics::Context->RSSetState(0);
 	Graphics::Context->OMSetDepthStencilState(0, 0);
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Sky::GetSkySRV()
+{
+	return skySRV;
 }

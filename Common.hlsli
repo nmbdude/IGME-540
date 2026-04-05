@@ -51,6 +51,12 @@ struct VTP_Sky
     float3 sampleDir : DIRECTION;
 };
 
+float SimpleFresnel(float3 n, float3 v, float f0)
+{
+    float NdotV = saturate(dot(n, v));
+    return f0 + (1 - f0) * pow(1 - NdotV, 5);
+}
+
 float Attenuate(Light light, float3 worldPos)
 {
     float dist = distance(light.Position, worldPos);
@@ -82,7 +88,7 @@ float3 CalculateDirectionalLight(Light light, float3 normal, float3 worldPos, fl
 float3 CalculatePointLight(Light light, float3 normal, float3 worldPos, float3 surfaceColor, float3 cameraPos, float specScale)
 {
     float3 direction = normalize(worldPos - light.Position);
-    float specular = SpecularTerm(light, normal, worldPos, cameraPos, specScale, direction) * surfaceColor;
+    float3 specular = SpecularTerm(light, normal, worldPos, cameraPos, specScale, direction) * surfaceColor;
     float3 diffuse = DiffuseColor(light, normal, direction) * surfaceColor;
     specular *= any(diffuse);
     return (diffuse + specular) * Attenuate(light, worldPos);

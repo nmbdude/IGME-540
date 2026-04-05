@@ -22,15 +22,22 @@ cbuffer ExternalData : register(b0)
 
 Texture2D SurfaceTexture : register(t0);
 Texture2D NormalMap : register(t1);
+TextureCube SkyTexture : register(t100);
 SamplerState Sampler : register(s0);
 
 float4 main(VTP_Normal input) : SV_TARGET
 {
     float4 finalColor = float4(0, 0, 0, 0);
 
+    
+    
     input.normal = normalize(Normals(NormalMap, Sampler, input, scale, offset));
     finalColor += CalculateLights(input, lights, lightCount, SurfaceTexture, Sampler,
     colorTint, ambientColor, scale, offset, cameraPosition);
     
-    return finalColor;
+    float3 viewVector = normalize(cameraPosition - input.worldPosition);
+    float3 reflectionVector = reflect(-viewVector, input.normal);
+    float3 reflectionColor = SkyTexture.Sample(Sampler, reflectionVector).rgb;
+    float3 result = lerp(finalColor.rgb, reflectionColor, SimpleFresnel(input.normal, viewVector, 0.04f));
+    return float4(result, 1);
 }

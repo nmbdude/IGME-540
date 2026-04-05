@@ -12,7 +12,7 @@ class Sky
 {
 private:
 	ComPtr<ID3D11SamplerState> samplerState;
-	ComPtr<ID3D11ShaderResourceView> skySRV;
+	static ComPtr<ID3D11ShaderResourceView> skySRV;
 	ComPtr<ID3D11DepthStencilState> depthStencilState;
 	ComPtr<ID3D11RasterizerState> rasterizerState;
 	PixelShaderPtr pixelShader;
@@ -35,5 +35,6 @@ public:
 		const wchar_t* front,
 		const wchar_t* back);
 	void Draw(Camera camera);
+	static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetSkySRV();
 };
 

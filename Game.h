@@ -60,6 +60,7 @@ private:
 	std::vector<Light> lights;
 
 	std::shared_ptr<Sky> sky;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skySRV;
 
 	//New Actors
 	Actor ASphere;
