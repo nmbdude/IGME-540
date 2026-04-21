@@ -41,6 +41,24 @@ Game::Game()
 		woodSRV.GetAddressOf()
 	);
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Diffuse/T_Stone_D.jpg").c_str(),
+		0,
+		stoneSRV.GetAddressOf()
+	);
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneNormalsSRV = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/Normal/T_Stone_N.png").c_str(),
+		0,
+		stoneNormalsSRV.GetAddressOf()
+	);
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodSpecularSRV = {};
 	CreateWICTextureFromFile(
 		Graphics::Device.Get(),
@@ -68,6 +86,42 @@ Game::Game()
 		glowSRV.GetAddressOf()
 	);
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> T_Bronze_A = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/PBR/bronze_albedo.png").c_str(),
+		0,
+		T_Bronze_A.GetAddressOf()
+	);
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> T_Bronze_N = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/PBR/bronze_normals.png").c_str(),
+		0,
+		T_Bronze_N.GetAddressOf()
+	);
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> T_Bronze_R = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/PBR/bronze_roughness.png").c_str(),
+		0,
+		T_Bronze_R.GetAddressOf()
+	);
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> T_Bronze_M = {};
+	CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/PBR/bronze_metal.png").c_str(),
+		0,
+		T_Bronze_M.GetAddressOf()
+	);
+
+	shadowDSV = Microsoft::WRL::ComPtr<ID3D11DepthStencilView>{};
+	CreateShadowMap();
+
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -78,89 +132,137 @@ Game::Game()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
-	MWood = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MWood->AddTextureSRV(0, woodSRV);
-	MWood->AddTextureSRV(1, woodSpecularSRV);
-	MWood->AddSampler(0, samplerState);
+	{
+		std::shared_ptr<Mesh> MSphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
+		std::shared_ptr<Mesh> MQuad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
+		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
+		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
+		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
+		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
 
-	MGlowingBricks = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"GlowingBricksPS.cso");
-	MGlowingBricks->AddTextureSRV(0, brickSRV);
-	MGlowingBricks->AddTextureSRV(1, glowSRV);
-	MGlowingBricks->AddSampler(0, samplerState);
+		meshList.push_back(MSphere);
+		meshList.push_back(MQuad);
+		meshList.push_back(MCylinder);
+		meshList.push_back(MHelix);
+		meshList.push_back(MCube);
+		meshList.push_back(MTorus);
+	}
+	
+	sky = std::make_shared<Sky>(meshList[4], samplerState);
+	skySRV = sky->CreateCubemap(
+		FixPath(L"../../Assets/Textures/Skybox/right.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/left.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/up.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/down.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/front.png").c_str(),
+		FixPath(L"../../Assets/Textures/Skybox/back.png").c_str()
+	);
+	sky->SetVertexShaderFromFile(L"SkyVS.cso");
+	sky->SetPixelShaderFromFile(L"SkyPS.cso");
 
-	MRed = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MRed->AddTextureSRV(0, brickSRV);
-	MRed->AddTextureSRV(1, woodSpecularSRV);
-	MRed->AddSampler(0, samplerState);
 
-	MGreen = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MGreen->AddTextureSRV(0, woodSRV);
-	MGreen->AddTextureSRV(1, woodSpecularSRV);
-	MGreen->AddSampler(0, samplerState);
+	M_Wood = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	M_Wood->AddTextureSRV(0, woodSRV);
+	M_Wood->AddTextureSRV(1, woodSpecularSRV);
+	M_Wood->AddSampler(0, samplerState);
 
-	MBlue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
-	MBlue->AddTextureSRV(0, brickSRV);
-	MBlue->AddTextureSRV(1, woodSpecularSRV);
-	MBlue->AddSampler(0, samplerState);
+	M_Stone = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"NormalMapVS.cso", L"NormalMapPS.cso");
+	M_Stone->AddTextureSRV(0, stoneSRV);
+	M_Stone->AddTextureSRV(1, stoneNormalsSRV);
+	M_Stone->AddSampler(0, samplerState);
 
-	MDebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
-	MDebugNormals->AddTextureSRV(0, woodSRV);
-	MDebugNormals->AddSampler(0, samplerState);
+	M_GlowingBricks = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"GlowingBricksPS.cso");
+	M_GlowingBricks->AddTextureSRV(0, brickSRV);
+	M_GlowingBricks->AddTextureSRV(1, glowSRV);
+	M_GlowingBricks->AddSampler(0, samplerState);
 
-	MDebugUVs = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugUVsPS.cso");
-	MDebugUVs->AddTextureSRV(0, brickSRV);
-	MDebugUVs->AddSampler(0, samplerState);
+	M_Red = std::make_shared<Material>(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	M_Red->AddTextureSRV(0, brickSRV);
+	M_Red->AddTextureSRV(1, woodSpecularSRV);
+	M_Red->AddSampler(0, samplerState);
 
-	MCustom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
-	MCustom->AddTextureSRV(0, woodSRV);
-	MCustom->AddSampler(0, samplerState);
+	M_Green = std::make_shared<Material>(XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	M_Green->AddTextureSRV(0, woodSRV);
+	M_Green->AddTextureSRV(1, woodSpecularSRV);
+	M_Green->AddSampler(0, samplerState);
+
+	M_Blue = std::make_shared<Material>(XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), L"VertexShader.cso", L"PixelShader.cso");
+	M_Blue->AddTextureSRV(0, brickSRV);
+	M_Blue->AddTextureSRV(1, woodSpecularSRV);
+	M_Blue->AddSampler(0, samplerState);
+
+	M_DebugNormals = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugNormalsPS.cso");
+	M_DebugNormals->AddTextureSRV(0, woodSRV);
+	M_DebugNormals->AddSampler(0, samplerState);
+
+	M_DebugUVs = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"DebugUVsPS.cso");
+	M_DebugUVs->AddTextureSRV(0, brickSRV);
+	M_DebugUVs->AddSampler(0, samplerState);
+
+	M_Custom = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"VertexShader.cso", L"CustomPS.cso");
+	M_Custom->AddTextureSRV(0, woodSRV);
+	M_Custom->AddSampler(0, samplerState);
+
+	M_Bronze = std::make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), L"NormalMapVS.cso", L"PBRNormalMapPS.cso");
+	M_Bronze->AddTextureSRV(0, T_Bronze_A);
+	M_Bronze->AddTextureSRV(1, T_Bronze_N);
+	M_Bronze->AddTextureSRV(2, T_Bronze_R);
+	M_Bronze->AddTextureSRV(3, T_Bronze_M);
+	M_Bronze->AddSampler(0, samplerState);
+
+	CreateGeometry();
+
+	
 
 	// Lights -------------------------------------------------------------
 	
-	// Directional Light
+	// Yellow Directional Light
 	Light directionalLight1 = {};
 	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	directionalLight1.intensity = 1.0f;
+	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 0.0);
+	directionalLight1.intensity = 5.0f;
 	lights.push_back(directionalLight1);
+	UpdateLightView(directionalLight1.Direction);
 
+	// Red Directional Light
 	Light directionalLight2 = {};
 	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.Direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	directionalLight2.Color = XMFLOAT3(1.0, 0.0, 0.0);
-	directionalLight2.intensity = 1.0f;
+	directionalLight2.intensity = 5.0f;
 	lights.push_back(directionalLight2);
 
+	// Blue Directional Light
 	Light directionalLight3 = {};
 	directionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	directionalLight3.Color = XMFLOAT3(0.0, 1.0, 0.0);
-	directionalLight3.intensity = 1.0f;
+	directionalLight3.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	directionalLight3.intensity = 5.0f;
 	lights.push_back(directionalLight3);
 
 	Light spotLight1 = {};
 	spotLight1.Type = LIGHT_TYPE_SPOT;
-	spotLight1.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	spotLight1.Color = XMFLOAT3(0.0, 0.0, 1.0);
+	spotLight1.Position = XMFLOAT3(11.0f, 5.0f, 5.0f);
+	spotLight1.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	spotLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
 	spotLight1.Range = 10.0f;
-	spotLight1.SpotInnerAngle = 20.0f;
-	spotLight1.SpotOuterAngle = 50.0f;
-	spotLight1.intensity = 3.0f;
+	spotLight1.SpotInnerAngle = 3.0f;
+	spotLight1.SpotOuterAngle = 20.0f;
+	spotLight1.intensity = 5.0f;
 	lights.push_back(spotLight1);
 
 	Light pointLight1 = {};
 	pointLight1.Type = LIGHT_TYPE_POINT;
-	pointLight1.Position = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	pointLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
-	pointLight1.intensity = 1.0f;
+	pointLight1.Position = XMFLOAT3(5.0f, 6.0f, 4.0f);
+	pointLight1.Color = XMFLOAT3(0.0, 1.0, 0.0);
+	pointLight1.intensity = 5.0f;
 	pointLight1.Range = 10.0f;
 
 	lights.push_back(pointLight1);
 
 
 	// --------------------------------------------------------------------
-	
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -193,7 +295,31 @@ Game::Game()
 	rainbowSpeed = 1.0f;
 	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
 
-	CreateGeometry();
+	ID3DBlob* vertexShaderBlob;
+	D3DReadFileToBlob(FixPath(L"ShadowVS.cso").c_str(), &vertexShaderBlob);
+	Graphics::Device->CreateVertexShader(
+		vertexShaderBlob->GetBufferPointer(), // Pointer to start of binary data
+		vertexShaderBlob->GetBufferSize(), // How big is that data?
+		0, // No classes in this shader
+		shadowVS.GetAddressOf()); // ID3D11VertexShader**
+
+	D3D11_INPUT_ELEMENT_DESC inputElements[1] = {};
+
+	// Set up the first element - a position, which is 3 float values
+	inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				
+	inputElements[0].SemanticName = "POSITION";							
+	inputElements[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+
+	InputLayoutPtr inputLayout;
+	// Create the input layout, verifying our description against actual shader code
+	Graphics::Device->CreateInputLayout(
+		inputElements,							// An array of descriptions
+		1,										// How many elements in that array?
+		vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
+		vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
+		inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
+
+	Graphics::Context->IASetInputLayout(inputLayout.Get());
 }
 
 
@@ -218,25 +344,8 @@ Game::~Game()
 void Game::CreateGeometry()
 {
 	//Custom Meshes
-	{
-		std::shared_ptr<Mesh> MSphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
-		std::shared_ptr<Mesh> MQuad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
-		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
-		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
-		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
-		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
-
-		meshList.push_back(MSphere);
-		meshList.push_back(MQuad);
-		meshList.push_back(MCylinder);
-		meshList.push_back(MHelix);
-		meshList.push_back(MCube);
-		meshList.push_back(MTorus);
-	}
-
-	CreateRowOfGeometry(MWood, 3.f, -7.f, 5.f);
-	CreateRowOfGeometry(MGlowingBricks, 0.f, -7.f, 5.f);
-	CreateRowOfGeometry(MCustom, -3.f, -7.f, 5.f);
+	CreateRowOfGeometry(M_Bronze, 3.f, -7.f, 5.f);
+	std::shared_ptr<Actor> floor = std::make_shared<Actor>(meshList[1], M_Stone, "Floor");
 }
 
 void Game::NewFrame(float deltaTime)
@@ -320,6 +429,66 @@ void Game::CreateRowOfGeometry(std::shared_ptr<Material> material, float y, floa
 	}
 }
 
+void Game::CreateShadowMap()
+{
+	D3D11_TEXTURE2D_DESC shadowMapDesc = {};
+	shadowMapDesc.Width = shadowMapResolution;
+	shadowMapDesc.Height = shadowMapResolution;
+	shadowMapDesc.ArraySize = 1;
+	shadowMapDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	shadowMapDesc.CPUAccessFlags = 0;
+	shadowMapDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowMapDesc.MipLevels = 1;
+	shadowMapDesc.MiscFlags = 0;
+	shadowMapDesc.SampleDesc.Count = 1;
+	shadowMapDesc.SampleDesc.Quality = 0;
+	shadowMapDesc.Usage = D3D11_USAGE_DEFAULT;
+	Texture shadowMapTexture;
+	Graphics::Device->CreateTexture2D(&shadowMapDesc, 0, shadowMapTexture.GetAddressOf());
+
+	// Create the depth/stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
+	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	shadowDSDesc.Texture2D.MipSlice = 0;
+	Graphics::Device->CreateDepthStencilView(
+		shadowMapTexture.Get(),
+		&shadowDSDesc,
+		shadowDSV.GetAddressOf());
+	// Create the SRV for the shadow map
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	Graphics::Device->CreateShaderResourceView(
+		shadowMapTexture.Get(),
+		&srvDesc,
+		shadowSRV.GetAddressOf());
+}
+
+void Game::UpdateLightView(XMFLOAT3 direction)
+{
+	XMVECTOR dirVector = XMLoadFloat3(&direction);
+	XMVECTOR downVector = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+	XMVECTOR upVector = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	if (XMComparisonAllTrue(XMVector3Equal(dirVector, downVector)))
+	{
+		upVector = XMVectorSet(0.0f, 0.99f, 0.0f, 0.0f);
+	}
+	XMMATRIX lightView = XMMatrixLookToLH(
+		XMVectorScale(XMLoadFloat3(&direction), -20.0f),
+		XMLoadFloat3(&direction),
+		upVector
+	);
+	XMMATRIX lightProjection = XMMatrixOrthographicLH(
+		lightProjectionSize,
+		lightProjectionSize,
+		1.0f,
+		100.0f
+	);
+}
+
 
 // --------------------------------------------------------
 // Handle resizing to match the new window size
@@ -346,10 +515,11 @@ void Game::Update(float deltaTime, float totalTime)
 		//actor->GetTransform()->Rotate(0.0f, 0.0f, deltaTime * 0.5f);
 		//actor->GetTransform()->SetScale(1.0f + 0.1f * sinf(totalTime * 2), 1.0f + 0.5f * sinf(totalTime), 1.0f);
 	}
-
+		
 #pragma region UI
 	// Custom windows
 	ImGui::Begin("Details");
+	ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
 	if(ImGui::TreeNode("App Details"))
 	{
 		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
@@ -449,7 +619,8 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 	if (ImGui::TreeNode("Lights"))
 	{
-		ImGui::Text("Light Count: %d", lights.size());
+		ImGui::ColorEdit3("Ambient Color", (float*)&ambientColor); 
+;		ImGui::Text("Light Count: %d", lights.size());
 		int count = 1;
 		for (Light& light : lights)
 		{
@@ -467,6 +638,7 @@ void Game::Update(float deltaTime, float totalTime)
 				else if (light.Type == LIGHT_TYPE_POINT)
 				{
 					ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f);
+					ImGui::DragFloat("Range", (float*)&light.Range, 0.01f);
 				}
 				else if (light.Type == LIGHT_TYPE_SPOT)
 				{
@@ -475,7 +647,7 @@ void Game::Update(float deltaTime, float totalTime)
 					ImGui::DragFloat("Inner Angle", &light.SpotInnerAngle, 0.1f, 0.f, 180.f);
 					ImGui::DragFloat("Outer Angle", &light.SpotOuterAngle, 0.1f, 0.f, 180.f);
 				}
-				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 5.f);
+				ImGui::DragFloat(intensityLabel.c_str(), &light.intensity, 0.01f, 0.f, 100.f);
 				ImGui::TreePop();
 			}
 			count++;
@@ -534,6 +706,12 @@ void Game::Update(float deltaTime, float totalTime)
 		Window::Quit();
 }
 
+struct ShadowVSData
+{
+	XMFLOAT4X4 world;
+	XMFLOAT4X4 view;
+	XMFLOAT4X4 proj;
+};
 
 // --------------------------------------------------------
 // Clear the screen, redraw everything, present to the user
@@ -547,8 +725,39 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		Graphics::Context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	}
+
+	ID3D11RenderTargetView* nullRTV{};
+	Graphics::Context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
+	Graphics::Context->PSSetShader(0, 0, 0);
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = (float)shadowMapResolution;
+	viewport.Height = (float)shadowMapResolution;
+	viewport.MaxDepth = 1.0f;
+	Graphics::Context->RSSetViewports(1, &viewport);
+
+
+	Graphics::Context->VSSetShader(shadowVS.Get(), 0, 0);
+	ShadowVSData shadowData = {};
+	shadowData.view = lightViewMatrix;
+	shaderData.projection = lightProjectionMatrix;
+
+	for (auto& a : actorList)
+	{
+		shadowData.world = a->GetTransform()->GetWorldMatrix();
+		Graphics::FillAndBindNextConstantBuffer(
+			&shadowData,
+			sizeof(ShadowVSData),
+			D3D11_VERTEX_SHADER,
+			0);
+		a->Draw();
 	}
 	
+	viewport.Width = (float)Window::Width();
+	viewport.Height = (float)Window::Height();
+	Graphics::Context->RSSetViewports(1, &viewport);
+	Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
 
 	for(std::shared_ptr<Actor> actor : actorList)
 	{
@@ -574,6 +783,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		psData.cameraPosition = activeCamera->GetTransform().GetPosition();
 		psData.ambientColor = ambientColor;
 		memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
+		psData.lightCount = (int)lights.size();
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&psData,
@@ -584,6 +794,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		actor->GetMaterial()->BindTexturesAndSamplers();
 		actor->Draw();
 	}
+
+	sky->Draw(*activeCamera.get());
 
 	// ImGui Render
 	{

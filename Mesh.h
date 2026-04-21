@@ -44,5 +44,6 @@ public:
 	int GetVertexCount();
 	int GetTriangleCount();
 	void Draw();
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 };
 

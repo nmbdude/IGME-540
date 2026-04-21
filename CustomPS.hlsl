@@ -23,5 +23,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     float tileCount = 4.0;
     float x = cos(input.uv.x * 6.2832 * tileCount) + time * 3;
     float y = sin(input.uv.y * 6.2832 * tileCount) + time * 2;
-    return float4(cos(x) + 0.1f, sin(y) + 0.1f, sin(y * 0.25f) + 0.2f, cos(x * 0.5f) + 0.25f);
+    float3 output = float3(cos(x) + 0.1f, sin(y) + 0.1f, sin(y * 0.25f) + 0.2f);
+    return float4(output, cos(x * 0.5f) + 0.25f);
 }

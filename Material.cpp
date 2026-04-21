@@ -1,29 +1,35 @@
 #include "Material.h"
 #include "PathHelpers.h"
 #include "Graphics.h"
+#include "Sky.h"
 #include <d3dcompiler.h>
 
 using namespace DirectX;
 
 Material::Material() : Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), VertexShaderPtr(), PixelShaderPtr()) {}
 
-Material::Material(DirectX::XMFLOAT4 colorTint) : Material(colorTint, VertexShaderPtr(), PixelShaderPtr()) {}
+Material::Material(DirectX::XMFLOAT4 colorTint) 
+	: Material(colorTint, VertexShaderPtr(), PixelShaderPtr()) {}
 
 Material::Material(const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath)
 	: colorTint(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))
 {
 	CreateVertShaderFromFile(vertexShaderFilePath);
 	CreatePixelShaderFromFile(pixelShaderFilePath);
+	AddTextureSRV(100, Sky::GetSkySRV());
 }
 
-Material::Material(DirectX::XMFLOAT4 colorTint, const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath) :
-	Material(vertexShaderFilePath, pixelShaderFilePath)
+Material::Material(DirectX::XMFLOAT4 colorTint, const wchar_t* vertexShaderFilePath, const wchar_t* pixelShaderFilePath) 
+	: Material(vertexShaderFilePath, pixelShaderFilePath)
 {
 	this->colorTint = colorTint;
 }
 
 Material::Material(DirectX::XMFLOAT4 colorTint, VertexShaderPtr vertexShader, PixelShaderPtr pixelShader)
-	: colorTint(colorTint), vertexShader(vertexShader), pixelShader(pixelShader){}
+	: colorTint(colorTint), vertexShader(vertexShader), pixelShader(pixelShader)
+{
+	AddTextureSRV(100, Sky::GetSkySRV());
+}
 
 // GETTERS --------------------------------------------------------------------
 DirectX::XMFLOAT4 Material::GetColorTint() { return colorTint; }
@@ -86,10 +92,9 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input!
 	inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
-	// Set up the second element - a color, which is 4 more float values
-	inputElements[3].Format = DXGI_FORMAT_R32_FLOAT;			// 3x 32-bit floats
-	inputElements[3].SemanticName = "TIME";							// Match our vertex shader input!
-	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
+	inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElements[3].SemanticName = "TANGENT";
+	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 
 	// Create the input layout, verifying our description against actual shader code
 	Graphics::Device->CreateInputLayout(

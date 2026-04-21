@@ -19,6 +19,12 @@
     <Filter Include="Source Files\ImGui">
       <UniqueIdentifier>{00f81220-ec01-492a-8740-4d6b25b831f1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Pixel Shaders">
+      <UniqueIdentifier>{e2640033-6668-4f28-9b90-628b24513c46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Vertex Shaders">
+      <UniqueIdentifier>{ce1f9bae-85f2-4791-852a-723bdc07bc55}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -77,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="TypeDefs.h">
       <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sky.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -146,25 +155,49 @@
     <ClInclude Include="Lights.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sky.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DebugUVsPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DebugNormalsPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="CustomPS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PBRNormalMapPS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PBRPixelShader.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyPS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalMapPS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="GlowingBricksPS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DebugUVsPS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DebugNormalsPS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalMapVS.hlsl">
+      <Filter>Shaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyVS.hlsl">
+      <Filter>Shaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Shaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowVS.hlsl">
+      <Filter>Shaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

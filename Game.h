@@ -13,6 +13,7 @@
 #include "Camera.h"
 #include <vector>
 #include "Lights.h"
+#include "Sky.h"
 
 class Game
 {
@@ -33,6 +34,8 @@ private:
 	void CreateGeometry();
 	void NewFrame(float deltaTime);
 	void CreateRowOfGeometry(std::shared_ptr<Material> material, float y, float xOffset, float zOffset);
+	void CreateShadowMap();
+	void UpdateLightView(DirectX::XMFLOAT3 direction);
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -55,8 +58,11 @@ private:
 	std::vector<std::shared_ptr<Actor>> actorList;
 	std::vector<std::shared_ptr<Mesh>> meshList;
 
-	DirectX::XMFLOAT3 ambientColor = { 0.1f, 0.1f, 0.25f };
+	DirectX::XMFLOAT3 ambientColor = { 0.276f, 0.276f, 0.569f };
 	std::vector<Light> lights;
+
+	std::shared_ptr<Sky> sky;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skySRV;
 
 	//New Actors
 	Actor ASphere;
@@ -66,14 +72,17 @@ private:
 	Actor ACube;
 
 	// Materials
-	std::shared_ptr<Material> MWood;
-	std::shared_ptr<Material> MGlowingBricks;
-	std::shared_ptr<Material> MRed;
-	std::shared_ptr<Material> MGreen;
-	std::shared_ptr<Material> MBlue;
-	std::shared_ptr<Material> MDebugNormals;
-	std::shared_ptr<Material> MDebugUVs;
-	std::shared_ptr<Material> MCustom;
+	Mat M_Wood;
+	Mat M_GlowingBricks;
+	Mat M_Red;
+	Mat M_Green;
+	Mat M_Blue;
+	Mat M_DebugNormals;
+	Mat M_DebugUVs;
+	Mat M_Custom;
+	Mat M_Stone;
+	Mat M_Bronze;
+	Mat M_Grass;
 
 	// User controls
 	float backgroundColor[4];
@@ -82,5 +91,16 @@ private:
 	float rainbowSpeed;
 	DirectX::XMFLOAT3 glowColor = {1.0f, 1.0f, 0.0f};
 	float glowIntensity = 1.0f;
+
+	// Shadows
+	VertexShaderPtr shadowVS;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> shadowRasterizer;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
+	DirectX::XMFLOAT4X4 lightViewMatrix;
+	DirectX::XMFLOAT4X4 lightProjectionMatrix;
+	int lightProjectionSize = 20.0f;
+	int shadowMapResolution = 2048;
 };
 

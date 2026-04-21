@@ -164,8 +164,8 @@ HRESULT Graphics::Initialize(unsigned int windowWidth, unsigned int windowHeight
 
 	Context->QueryInterface<ID3D11DeviceContext1>(Context1.GetAddressOf());
 	cbHeapOffsetInBytes = 0;
-	cbHeapSizeInBytes = 1000 * 256;
-	cbHeapSizeInBytes = (cbHeapSizeInBytes + 255) / 256 * 256;
+	cbHeapSizeInBytes = 2000 * 512;
+	cbHeapSizeInBytes = (cbHeapSizeInBytes + 511) / 512 * 512;
 	D3D11_BUFFER_DESC cbHeapDesc = {};
 	cbHeapDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbHeapDesc.ByteWidth = cbHeapSizeInBytes;

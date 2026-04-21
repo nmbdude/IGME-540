@@ -33,7 +33,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
     float4 maskColor = MaskTexture.Sample(Sampler, uvs);
     float4 glow = float4(glowColor * glowIntensity, 1.0f) * maskColor.r;
-    return surfaceColor + glow;
+    return pow(surfaceColor + glow, 1.0/2.2f);
     //return float4(maskColor.aaa, 1.0f);
 
 }
