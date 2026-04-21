@@ -33,11 +33,11 @@ float4 main(VTP_Normal input) : SV_TARGET
 {
     float4 finalColor = float4(0, 0, 0, 0);
 
+    
     input.normal = normalize(Normals(NormalMap, Sampler, input, scale, offset));
-          
     finalColor += CalculateLights(input, lights, lightCount, SurfaceTexture, Sampler,
     colorTint, ambientColor, scale, offset, cameraPosition);
-        
+    
     float3 viewVector = normalize(cameraPosition - input.worldPosition);
     float3 reflectionVector = reflect(-viewVector, input.normal);
     float3 reflectionColor = SkyTexture.Sample(Sampler, reflectionVector).rgb;
