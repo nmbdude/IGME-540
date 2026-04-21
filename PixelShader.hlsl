@@ -37,42 +37,42 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
     return pow(CalculateLights(input, lights, lightCount, SurfaceTexture, Sampler, 
     colorTint, ambientColor, scale, offset, cameraPosition), 1.0/2.2f);
-    input.normal = normalize(input.normal);
-    float2 uvs = input.uv * scale + offset;
-    
-    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
-    float3 ambient = ambientColor * surfaceColor.rgb;
-    float specScale = 0.5f;
-    
-    for (int i = 0; i < 4; i++)
-    {
-        finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
-    }
-    finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    
-    finalColor += float4(ambient, 0);
-    finalColor.a = 1;
-    
-    return finalColor;
-    input.normal = normalize(input.normal);
-    float2 uvs = input.uv * scale + offset;
-    
-    float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
-    float3 ambient = ambientColor * surfaceColor.rgb;
-    float specScale = 0.5f;
-    
-    for (int i = 0; i < 4; i++)
-    {
-        finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
-    }
-    finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
-    
-    finalColor += float4(ambient, 0);
-    finalColor.a = 1;
-    
-    return finalColor;
+    //input.normal = normalize(input.normal);
+    //float2 uvs = input.uv * scale + offset;
+    //
+    //float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
+    //float3 ambient = ambientColor * surfaceColor.rgb;
+    //float specScale = 0.5f;
+    //
+    //for (int i = 0; i < 4; i++)
+    //{
+    //    finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
+    //}
+    //finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //
+    //finalColor += float4(ambient, 0);
+    //finalColor.a = 1;
+    //
+    //return finalColor;
+    //input.normal = normalize(input.normal);
+    //float2 uvs = input.uv * scale + offset;
+    //
+    //float4 surfaceColor = SurfaceTexture.Sample(Sampler, uvs) * colorTint;
+    //float3 ambient = ambientColor * surfaceColor.rgb;
+    //float specScale = 0.5f;
+    //
+    //for (int i = 0; i < 4; i++)
+    //{
+    //    finalColor += float4(CalculateDirectionalLight(lights[i], input.normal, input.worldPosition, cameraPosition, surfaceColor.rgb, specScale), 1);
+    //}
+    //finalColor += float4(CalculatePointLight(lights[4], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //return float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //finalColor += float4(CalculateSpotLight(lights[3], input.normal, input.worldPosition, surfaceColor.rgb, cameraPosition, specScale), 1);
+    //
+    //finalColor += float4(ambient, 0);
+    //finalColor.a = 1;
+    //
+    //return finalColor;
 }

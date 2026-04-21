@@ -294,7 +294,7 @@ Game::Game()
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
 	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
-
+	inputLayout = InputLayoutPtr{};
 	ID3DBlob* vertexShaderBlob;
 	D3DReadFileToBlob(FixPath(L"ShadowVS.cso").c_str(), &vertexShaderBlob);
 	Graphics::Device->CreateVertexShader(
@@ -302,24 +302,6 @@ Game::Game()
 		vertexShaderBlob->GetBufferSize(), // How big is that data?
 		0, // No classes in this shader
 		shadowVS.GetAddressOf()); // ID3D11VertexShader**
-
-	D3D11_INPUT_ELEMENT_DESC inputElements[1] = {};
-
-	// Set up the first element - a position, which is 3 float values
-	inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				
-	inputElements[0].SemanticName = "POSITION";							
-	inputElements[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-
-	InputLayoutPtr inputLayout;
-	// Create the input layout, verifying our description against actual shader code
-	Graphics::Device->CreateInputLayout(
-		inputElements,							// An array of descriptions
-		1,										// How many elements in that array?
-		vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
-		vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
-		inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
-
-	Graphics::Context->IASetInputLayout(inputLayout.Get());
 }
 
 
@@ -730,15 +712,15 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	ID3D11RenderTargetView* nullRTV{};
 	Graphics::Context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
-	Graphics::Context->PSSetShader(0, 0, 0);
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = (float)shadowMapResolution;
 	viewport.Height = (float)shadowMapResolution;
 	viewport.MaxDepth = 1.0f;
 	Graphics::Context->RSSetViewports(1, &viewport);
 
-
 	Graphics::Context->VSSetShader(shadowVS.Get(), 0, 0);
+	Graphics::Context->PSSetShader(0, 0, 0);
+
 	ShadowVSData shadowData = {};
 	shadowData.view = lightViewMatrix;
 	shaderData.projection = lightProjectionMatrix;
@@ -751,7 +733,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			sizeof(ShadowVSData),
 			D3D11_VERTEX_SHADER,
 			0);
-		a->Draw();
+		a->GetMesh()->Draw();
 	}
 	
 	viewport.Width = (float)Window::Width();

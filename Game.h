@@ -93,6 +93,7 @@ private:
 	float glowIntensity = 1.0f;
 
 	// Shadows
+	InputLayoutPtr inputLayout;
 	VertexShaderPtr shadowVS;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
