@@ -530,9 +530,6 @@ void Game::ShadowMapRender()
 {
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context = Graphics::Context;
 	context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	ID3D11ShaderResourceView* nullSRVs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = {};
-	context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, nullSRVs);
-	//context->OMSetRenderTargets(0, nullptr, shadowDSV.Get());
 
 	ID3D11RenderTargetView* nullRTV{};
 	context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
@@ -880,5 +877,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			1,
 			Graphics::BackBufferRTV.GetAddressOf(),
 			Graphics::DepthBufferDSV.Get());
+
+		ID3D11ShaderResourceView* nullSRVs[128] = {};
+		Graphics::Context->PSSetShaderResources(0, 128, nullSRVs);
 	}
 }
