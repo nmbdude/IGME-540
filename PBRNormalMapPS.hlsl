@@ -24,9 +24,10 @@ Texture2D Albedo : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
-SamplerState BasicSampler : register(s0);
+Texture2D ShadowMap : register(t4);
 TextureCube SkyTexture : register(t100);
 SamplerState Sampler : register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
 
 // Needed to add this to remove a weird error/warning from VS saying the Normals function didn't take 5 arguments
 float3 Normals(Texture2D normalTexture, SamplerState Sampler, VTP_Normal input, float2 uvScale, float2 uvOffset);
@@ -35,10 +36,22 @@ float3 Normals(Texture2D normalTexture, SamplerState Sampler, VTP_Normal input, 
 float4 main(VTP_Normal input) : SV_TARGET
 {
     float4 finalColor = float4(0, 0, 0, 1);
+
+    input.shadowMapPos /= input.shadowMapPos.w;
+    
+    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1 - shadowUV.y;
+    
+    float distanceToLight = input.shadowMapPos.z;
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(
+        ShadowSampler,
+        shadowUV,
+        distanceToLight).r;
+        
     input.normal = normalize(Normals(NormalMap, Sampler, input, scale, offset));
     
     finalColor += PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, input, lights,
-    lightCount, cameraPosition, input.normal);
+    lightCount, cameraPosition, input.normal, shadowAmount);
     
     float3 viewVector = normalize(cameraPosition - input.worldPosition);
     float3 reflectionVector = reflect(-viewVector, input.normal);

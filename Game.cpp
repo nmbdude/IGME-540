@@ -122,7 +122,7 @@ Game::Game()
 	shadowDSV = Microsoft::WRL::ComPtr<ID3D11DepthStencilView>{};
 	CreateShadowMap();
 
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
+	
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -219,8 +219,8 @@ Game::Game()
 	// Yellow Directional Light
 	Light directionalLight1 = {};
 	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 0.0);
+	directionalLight1.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	directionalLight1.Color = XMFLOAT3(1.0, 1.0, 1.0);
 	directionalLight1.intensity = 5.0f;
 	lights.push_back(directionalLight1);
 	UpdateLightView(directionalLight1.Direction);
@@ -230,7 +230,7 @@ Game::Game()
 	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.Direction = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	directionalLight2.Color = XMFLOAT3(1.0, 0.0, 0.0);
-	directionalLight2.intensity = 5.0f;
+	directionalLight2.intensity = 0.0f;
 	lights.push_back(directionalLight2);
 
 	// Blue Directional Light
@@ -238,7 +238,7 @@ Game::Game()
 	directionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	directionalLight3.Color = XMFLOAT3(0.0, 0.0, 1.0);
-	directionalLight3.intensity = 5.0f;
+	directionalLight3.intensity = 0.0f;
 	lights.push_back(directionalLight3);
 
 	Light spotLight1 = {};
@@ -249,14 +249,14 @@ Game::Game()
 	spotLight1.Range = 10.0f;
 	spotLight1.SpotInnerAngle = 3.0f;
 	spotLight1.SpotOuterAngle = 20.0f;
-	spotLight1.intensity = 5.0f;
+	spotLight1.intensity = 0.0f;
 	lights.push_back(spotLight1);
 
 	Light pointLight1 = {};
 	pointLight1.Type = LIGHT_TYPE_POINT;
 	pointLight1.Position = XMFLOAT3(5.0f, 6.0f, 4.0f);
 	pointLight1.Color = XMFLOAT3(0.0, 1.0, 0.0);
-	pointLight1.intensity = 5.0f;
+	pointLight1.intensity = 0.0f;
 	pointLight1.Range = 10.0f;
 
 	lights.push_back(pointLight1);
@@ -328,6 +328,9 @@ void Game::CreateGeometry()
 	//Custom Meshes
 	CreateRowOfGeometry(M_Bronze, 3.f, -7.f, 5.f);
 	std::shared_ptr<Actor> floor = std::make_shared<Actor>(meshList[1], M_Stone, "Floor");
+	floor->GetTransform()->SetPosition(0.f, -1.f, 0.f);
+	floor->GetTransform()->SetScale(20.f, 1.f, 20.f);
+	actorList.push_back(floor);
 }
 
 void Game::NewFrame(float deltaTime)
@@ -411,6 +414,8 @@ void Game::CreateRowOfGeometry(std::shared_ptr<Material> material, float y, floa
 	}
 }
 
+// Shadow Methods ------------------------------------------------------------
+
 void Game::CreateShadowMap()
 {
 	D3D11_TEXTURE2D_DESC shadowMapDesc = {};
@@ -447,21 +452,37 @@ void Game::CreateShadowMap()
 		shadowMapTexture.Get(),
 		&srvDesc,
 		shadowSRV.GetAddressOf());
+
+	D3D11_RASTERIZER_DESC shadowRasterizerDesc = {};
+	shadowRasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	shadowRasterizerDesc.CullMode = D3D11_CULL_BACK;
+	shadowRasterizerDesc.DepthClipEnable = false;
+	shadowRasterizerDesc.DepthBias = 1000;
+	shadowRasterizerDesc.SlopeScaledDepthBias = 1.0f;
+	Graphics::Device->CreateRasterizerState(&shadowRasterizerDesc, shadowRasterizer.GetAddressOf());
+
+	D3D11_SAMPLER_DESC shadowSamplerDesc = {};
+	shadowSamplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	shadowSamplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+	shadowSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.BorderColor[0] = 1.0f;
+	Graphics::Device->CreateSamplerState(&shadowSamplerDesc, shadowSampler.GetAddressOf());
 }
 
-void Game::UpdateLightView(XMFLOAT3 direction)
+void Game::UpdateLightView(XMFLOAT3 direction, XMFLOAT3 position)
 {
 	XMVECTOR dirVector = XMLoadFloat3(&direction);
 	XMVECTOR downVector = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-	XMVECTOR upVector = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	if (XMComparisonAllTrue(XMVector3Equal(dirVector, downVector)))
-	{
-		upVector = XMVectorSet(0.0f, 0.99f, 0.0f, 0.0f);
-	}
+	XMVECTOR worldUp = XMVectorSet(0, 1, 0, 0);
+	if (fabsf(XMVectorGetX(XMVector3Dot(dirVector, worldUp))) > 0.99f)
+		worldUp = XMVectorSet(0, 0, 1, 0);
+
 	XMMATRIX lightView = XMMatrixLookToLH(
-		XMVectorScale(XMLoadFloat3(&direction), -20.0f),
-		XMLoadFloat3(&direction),
-		upVector
+		XMVectorAdd(XMVectorScale(-dirVector, 20.0f), XMLoadFloat3(&position)),
+		dirVector,
+		worldUp
 	);
 	XMMATRIX lightProjection = XMMatrixOrthographicLH(
 		lightProjectionSize,
@@ -469,8 +490,93 @@ void Game::UpdateLightView(XMFLOAT3 direction)
 		1.0f,
 		100.0f
 	);
+
+	XMStoreFloat4x4(&lightViewMatrix, lightView);
+	XMStoreFloat4x4(&lightProjectionMatrix, lightProjection);
 }
 
+void Game::UpdateLightView(XMFLOAT3 direction)
+{
+	XMVECTOR dirVector = XMLoadFloat3(&direction);
+	XMVECTOR downVector = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+	XMVECTOR worldUp = XMVectorSet(0, 1, 0, 0);
+	if (fabsf(XMVectorGetX(XMVector3Dot(dirVector, worldUp))) > 0.99f)
+		worldUp = XMVectorSet(0, 0, 1, 0);
+
+	XMMATRIX lightView = XMMatrixLookToLH(
+		XMVectorScale(-dirVector, 20.0f),
+		dirVector,
+		worldUp
+	);
+	XMMATRIX lightProjection = XMMatrixOrthographicLH(
+		lightProjectionSize,
+		lightProjectionSize,
+		1.0f,
+		100.0f
+	);
+
+	XMStoreFloat4x4(&lightViewMatrix, lightView);
+	XMStoreFloat4x4(&lightProjectionMatrix, lightProjection);
+}
+
+struct ShadowVSData
+{
+	XMFLOAT4X4 world;
+	XMFLOAT4X4 view;
+	XMFLOAT4X4 proj;
+};
+
+void Game::ShadowMapRender()
+{
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context = Graphics::Context;
+	context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	ID3D11ShaderResourceView* nullSRVs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = {};
+	context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, nullSRVs);
+	//context->OMSetRenderTargets(0, nullptr, shadowDSV.Get());
+
+	ID3D11RenderTargetView* nullRTV{};
+	context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
+
+	context->PSSetShader(0, 0, 0);
+
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = (float)shadowMapResolution;
+	viewport.Height = (float)shadowMapResolution;
+	viewport.MaxDepth = 1.0f;
+	context->RSSetViewports(1, &viewport);
+
+	context->VSSetShader(shadowVS.Get(), 0, 0);
+
+	context->RSSetState(shadowRasterizer.Get());
+
+	ShadowVSData vsData = {};
+	vsData.view = lightViewMatrix;
+	vsData.proj = lightProjectionMatrix;
+
+	for (auto& a : actorList)
+	{
+		vsData.world = a->GetTransform()->GetWorldMatrix();
+		Graphics::FillAndBindNextConstantBuffer(
+			&vsData,
+			sizeof(ShadowVSData),
+			D3D11_VERTEX_SHADER,
+			0);
+		a->GetMesh()->Draw();
+	}
+
+	viewport.Width = (float)Window::Width();
+	viewport.Height = (float)Window::Height();
+	context->RSSetViewports(1, &viewport);
+	context->OMSetRenderTargets(
+		1,
+		Graphics::BackBufferRTV.GetAddressOf(),
+		Graphics::DepthBufferDSV.Get()
+	);
+
+	context->RSSetState(0);
+}
+
+// -------------------------------------------------------------------------
 
 // --------------------------------------------------------
 // Handle resizing to match the new window size
@@ -615,11 +721,17 @@ void Game::Update(float deltaTime, float totalTime)
 				ImGui::ColorEdit3("Color", (float*)&light.Color);
 				if (light.Type == LIGHT_TYPE_DIRECTIONAL)
 				{
-					ImGui::DragFloat3("Direction", (float*)&light.Direction, 0.01f);
+					if (ImGui::DragFloat3("Direction", (float*)&light.Direction, 0.01f))
+					{
+						UpdateLightView(light.Direction);
+					}
 				}
 				else if (light.Type == LIGHT_TYPE_POINT)
 				{
-					ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f);
+					if (ImGui::DragFloat3("Position", (float*)&light.Position, 0.01f))
+					{
+						//UpdateLightView
+					}
 					ImGui::DragFloat("Range", (float*)&light.Range, 0.01f);
 				}
 				else if (light.Type == LIGHT_TYPE_SPOT)
@@ -688,13 +800,6 @@ void Game::Update(float deltaTime, float totalTime)
 		Window::Quit();
 }
 
-struct ShadowVSData
-{
-	XMFLOAT4X4 world;
-	XMFLOAT4X4 view;
-	XMFLOAT4X4 proj;
-};
-
 // --------------------------------------------------------
 // Clear the screen, redraw everything, present to the user
 // --------------------------------------------------------
@@ -707,39 +812,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-		Graphics::Context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	ID3D11RenderTargetView* nullRTV{};
-	Graphics::Context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
-	D3D11_VIEWPORT viewport = {};
-	viewport.Width = (float)shadowMapResolution;
-	viewport.Height = (float)shadowMapResolution;
-	viewport.MaxDepth = 1.0f;
-	Graphics::Context->RSSetViewports(1, &viewport);
+	ShadowMapRender();
 
-	Graphics::Context->VSSetShader(shadowVS.Get(), 0, 0);
-	Graphics::Context->PSSetShader(0, 0, 0);
-
-	ShadowVSData shadowData = {};
-	shadowData.view = lightViewMatrix;
-	shaderData.projection = lightProjectionMatrix;
-
-	for (auto& a : actorList)
-	{
-		shadowData.world = a->GetTransform()->GetWorldMatrix();
-		Graphics::FillAndBindNextConstantBuffer(
-			&shadowData,
-			sizeof(ShadowVSData),
-			D3D11_VERTEX_SHADER,
-			0);
-		a->GetMesh()->Draw();
-	}
-	
-	viewport.Width = (float)Window::Width();
-	viewport.Height = (float)Window::Height();
-	Graphics::Context->RSSetViewports(1, &viewport);
-	Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
+	Graphics::Context->PSSetShaderResources(4, 1, shadowSRV.GetAddressOf());
+	Graphics::Context->PSSetSamplers(1, 1, shadowSampler.GetAddressOf());
 
 	for(std::shared_ptr<Actor> actor : actorList)
 	{
@@ -748,6 +826,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		vsData.view = activeCamera->GetViewMatrix();
 		vsData.projection = activeCamera->GetProjectionMatrix();
 		vsData.worldInverseTranspose = actor->GetTransform()->GetWorldInverseTransposeMatrix();
+		vsData.lightView = lightViewMatrix;
+		vsData.lightProjection = lightProjectionMatrix;
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&vsData,

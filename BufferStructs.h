@@ -11,7 +11,8 @@ struct VertexShaderData
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;
 	DirectX::XMFLOAT4X4 worldInverseTranspose;
-	DirectX::XMFLOAT3 tangent;
+	DirectX::XMFLOAT4X4 lightView;
+	DirectX::XMFLOAT4X4 lightProjection;
 };
 
 struct PixelShaderData

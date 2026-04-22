@@ -15,6 +15,7 @@ struct VertexToPixel
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
     float3 worldPosition : POSITION;
+    float4 shadowMapPos : SHADOW_POSITION;
 };
 
 struct VTP_Normal
@@ -24,6 +25,7 @@ struct VTP_Normal
     float3 normal : NORMAL;
     float3 worldPosition : POSITION;
     float3 tangent : TANGENT;
+    float4 shadowMapPos : SHADOW_POSITION;
 };
 
 struct VertexShaderInput
@@ -111,7 +113,7 @@ float3 CalculateSpotLight(Light light, float3 normal, float3 worldPos, float3 su
 }
 
 float4 CalculateLights(VertexToPixel input, Light lights[MAX_LIGHTS], int lightCount, Texture2D surfaceTexture, SamplerState Sampler, 
-    float4 colorTint, float3 ambientColor, float2 uvScale, float2 uvOffset, float3 cameraPosition)
+    float4 colorTint, float3 ambientColor, float2 uvScale, float2 uvOffset, float3 cameraPosition, float shadowAmount)
 {
     float4 finalColor = float4(0, 0, 0, 0);
     
@@ -140,23 +142,28 @@ float4 CalculateLights(VertexToPixel input, Light lights[MAX_LIGHTS], int lightC
             default:
                 break;
         }
+        
+        if (i == 0)
+        {
+            finalColor.rgb *= shadowAmount;
+        }
     }
     
-    finalColor += float4(ambient, 0);
+    //finalColor += float4(ambient, 0);
     finalColor.a = 1;
     
     return finalColor;
 }
 
 float4 CalculateLights(VTP_Normal input, Light lights[MAX_LIGHTS], int lightCount, Texture2D surfaceTexture, SamplerState Sampler, 
-    float4 colorTint, float3 ambientColor, float2 uvScale, float2 uvOffset, float3 cameraPosition)
+    float4 colorTint, float3 ambientColor, float2 uvScale, float2 uvOffset, float3 cameraPosition, float shadowAmount)
 {
     VertexToPixel vtpInput;
     vtpInput.normal = input.normal;
     vtpInput.uv = input.uv;
     vtpInput.worldPosition = input.worldPosition;
     vtpInput.screenPosition = input.screenPosition;
-    return CalculateLights(vtpInput, lights, lightCount, surfaceTexture, Sampler, colorTint, ambientColor, uvScale, uvOffset, cameraPosition);
+    return CalculateLights(vtpInput, lights, lightCount, surfaceTexture, Sampler, colorTint, ambientColor, uvScale, uvOffset, cameraPosition, shadowAmount);
 }
 
 float3 Normals(Texture2D normalTexture, SamplerState Sampler, VTP_Normal input, float2 uvScale, float2 uvOffset)
@@ -259,7 +266,7 @@ float3 PBRSpotLight(Light light, float3 normal, float3 worldPos, float3 toCamera
 }
 
 float4 PBRCalculateLights(Texture2D Albedo, Texture2D RoughnessMap, Texture2D MetalnessMap, SamplerState Sampler, VTP_Normal input, Light lights[MAX_LIGHTS],
-    int lightCount, float3 cameraPosition, float3 normal)
+    int lightCount, float3 cameraPosition, float3 normal, float shadowAmount)
 {
     float4 finalColor = float4(0, 0, 0, 1);
 
@@ -290,19 +297,24 @@ float4 PBRCalculateLights(Texture2D Albedo, Texture2D RoughnessMap, Texture2D Me
             default:
                 break;
         }
+        
+        if(i == 0)
+        {
+            finalColor.rgb *= shadowAmount;
+        }
     }
     
     return finalColor;
 }
 
 float4 PBRCalculateLights(Texture2D Albedo, Texture2D RoughnessMap, Texture2D MetalnessMap, SamplerState Sampler, VertexToPixel input, Light lights[MAX_LIGHTS],
-    int lightCount, float3 cameraPosition, float3 normal)
+    int lightCount, float3 cameraPosition, float3 normal, float shadowAmount)
 {
     VTP_Normal normalInput;
     normalInput.normal = input.normal;
     normalInput.uv = input.uv;
     normalInput.worldPosition = input.worldPosition;
     normalInput.screenPosition = input.screenPosition;
-    return PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, normalInput, lights, lightCount, cameraPosition, normal);
+    return PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, normalInput, lights, lightCount, cameraPosition, normal, shadowAmount);
 }
 #endif

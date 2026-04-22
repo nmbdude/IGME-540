@@ -23,13 +23,14 @@ Texture2D Albedo : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
-SamplerState BasicSampler : register(s0);
+Texture2D ShadowMap : register(t4);
 TextureCube SkyTexture : register(t100);
 SamplerState Sampler : register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
 
 // Here to get rid of a weird error/warning from VS saying the PBRCalculateLights function didn't take 9 arguments
 float4 PBRCalculateLights(Texture2D Albedo, Texture2D RoughnessMap, Texture2D MetalnessMap, SamplerState Sampler, VertexToPixel input, Light lights[MAX_LIGHTS],
-    int lightCount, float3 cameraPosition, float3 normal);
+    int lightCount, float3 cameraPosition, float3 normal, float shadowAmount);
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
 // 
@@ -42,11 +43,22 @@ float4 PBRCalculateLights(Texture2D Albedo, Texture2D RoughnessMap, Texture2D Me
 float4 main(VertexToPixel input) : SV_TARGET
 {
     float4 finalColor = float4(0, 0, 0, 1);    
+
+    input.shadowMapPos /= input.shadowMapPos.w;
+    
+    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1 - shadowUV.y;
+    
+    float distanceToLight = input.shadowMapPos.z;
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(
+        ShadowSampler,
+        shadowUV,
+        distanceToLight).r;
     
     float3 viewVector = normalize(cameraPosition - input.worldPosition);
     float3 reflectionVector = reflect(-viewVector, input.normal);
     float3 reflectionColor = SkyTexture.Sample(Sampler, reflectionVector).rgb;
-    finalColor += PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, input, lights, lightCount, cameraPosition, input.normal);
+    finalColor += PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, input, lights, lightCount, cameraPosition, input.normal, shadowAmount);
     float3 result = lerp(finalColor.rgb, reflectionColor, F_Schlick(input.normal, viewVector, 0.04f));
     return float4(pow(result, 1.0 / 2.2f), 1);
 }

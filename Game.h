@@ -35,7 +35,9 @@ private:
 	void NewFrame(float deltaTime);
 	void CreateRowOfGeometry(std::shared_ptr<Material> material, float y, float xOffset, float zOffset);
 	void CreateShadowMap();
+	void UpdateLightView(DirectX::XMFLOAT3 direction, DirectX::XMFLOAT3 position);
 	void UpdateLightView(DirectX::XMFLOAT3 direction);
+	void ShadowMapRender();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -57,6 +59,8 @@ private:
 	VertexShaderData shaderData;
 	std::vector<std::shared_ptr<Actor>> actorList;
 	std::vector<std::shared_ptr<Mesh>> meshList;
+
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = {};
 
 	DirectX::XMFLOAT3 ambientColor = { 0.276f, 0.276f, 0.569f };
 	std::vector<Light> lights;
@@ -101,7 +105,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
 	DirectX::XMFLOAT4X4 lightViewMatrix;
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
-	int lightProjectionSize = 20.0f;
-	int shadowMapResolution = 2048;
+	float lightProjectionSize = 20.0f;
+	float shadowMapResolution = 2048;
 };
 

@@ -75,7 +75,7 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	//  - Doing this NOW because it requires a vertex shader's byte code to verify against!
 	//  - Luckily, we already have that loaded (the vertex shader blob above)
 
-	D3D11_INPUT_ELEMENT_DESC inputElements[4] = {};
+	D3D11_INPUT_ELEMENT_DESC inputElements[5] = {};
 
 	// Set up the first element - a position, which is 3 float values
 	inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				// Most formats are described as color channels; really it just means "Three 32-bit floats"
@@ -96,10 +96,14 @@ void Material::CreateVertShaderFromFile(const wchar_t* filePath)
 	inputElements[3].SemanticName = "TANGENT";
 	inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 
+	inputElements[4].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElements[4].SemanticName = "SHADOW_POSITION";
+	inputElements[4].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+
 	// Create the input layout, verifying our description against actual shader code
 	Graphics::Device->CreateInputLayout(
 		inputElements,							// An array of descriptions
-		4,										// How many elements in that array?
+		5,										// How many elements in that array?
 		vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
 		vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 		inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
