@@ -1,7 +1,7 @@
 #include "Actor.h"
 
-Actor::Actor() {}
-	//: Actor(std::make_shared<Mesh>(), std::make_shared<Transform>(), std::make_shared<Material>()) {}
+Actor::Actor()
+	: Actor(std::make_shared<Mesh>(), std::make_shared<Transform>(), std::make_shared<Material>()) {}
 
 Actor::Actor(std::shared_ptr<Mesh> mesh) 
 	: Actor(mesh, std::make_shared<Transform>(), std::make_shared<Material>()) {}
@@ -25,6 +25,7 @@ Actor::~Actor() {}
 
 void Actor::SetName(std::string name) { this->name = name; }
 void Actor::SetMaterial(std::shared_ptr<Material> material) { this->material = material; }
+void Actor::SetMesh(std::shared_ptr<Mesh> mesh) { this->mesh = mesh; }
 
 std::string Actor::GetName() { return name; }
 std::shared_ptr<Mesh> Actor::GetMesh() { return mesh; }

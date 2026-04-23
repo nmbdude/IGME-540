@@ -2,9 +2,10 @@
 #include <d3d11.h>
 #include <memory>
 #include <wrl/client.h>
-#include "Actor.h"
+#include <DirectXMath.h>
 
 class Material;
+class Actor;
 
 typedef Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShaderPtr;
 typedef Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShaderPtr;

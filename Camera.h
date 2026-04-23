@@ -2,6 +2,7 @@
 #include <DirectXMath.h>
 #include "Transform.h"
 #include "Input.h"
+#include "Window.h"
 
 class Camera
 {
@@ -22,7 +23,8 @@ public:
 	void UpdateViewMatrix();
 
 	void Update(float dt);
-
+	
+	bool RaycastFromMouse(DirectX::XMFLOAT3& rayOrigin);
 
 private:
 	Transform transform;

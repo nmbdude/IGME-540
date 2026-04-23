@@ -302,6 +302,8 @@ Game::Game()
 		vertexShaderBlob->GetBufferSize(), // How big is that data?
 		0, // No classes in this shader
 		shadowVS.GetAddressOf()); // ID3D11VertexShader**
+
+	gizmo = Gizmo();
 }
 
 
@@ -794,7 +796,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 	if (Input::MouseLeftPress())
 	{
-
+		
 	}
 
 	activeCamera->Update(deltaTime);

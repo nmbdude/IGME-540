@@ -13,9 +13,13 @@ public:
 	Gizmo();
 	~Gizmo();
 
-	bool visible;
+	void Drag(DirectX::XMFLOAT3 dragAmount, AActor draggedArrow, AActor draggedActor);
 
 private:
+	std::shared_ptr<Transform> transform;
 
+	AActor AYArrow = std::make_shared<Actor>();
+	AActor AXArrow = std::make_shared<Actor>();
+	AActor AZArrow = std::make_shared<Actor>();
 };
 

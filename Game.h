@@ -14,6 +14,7 @@
 #include <vector>
 #include "Lights.h"
 #include "Sky.h"
+#include "Gizmo.h"
 
 class Game
 {
@@ -69,6 +70,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skySRV;
 
 	Actor selectedActor;
+	Gizmo gizmo;
 
 	//New Actors
 	Actor ASphere;

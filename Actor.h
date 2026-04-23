@@ -20,6 +20,7 @@ public:
 	
 	void SetName(std::string name);
 	void SetMaterial(std::shared_ptr<Material> material);
+	void SetMesh(std::shared_ptr<Mesh> mesh);
 
 	std::string GetName();
 	std::shared_ptr<Mesh> GetMesh();
