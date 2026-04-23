@@ -28,6 +28,8 @@ public:
 
 	void Draw();
 
+	bool visbile = true;
+
 private:
 	std::string name;
 	std::shared_ptr<Transform> transform;

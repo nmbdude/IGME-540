@@ -133,19 +133,19 @@ Game::Game()
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
 	{
-		std::shared_ptr<Mesh> MSphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
-		std::shared_ptr<Mesh> MQuad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
-		std::shared_ptr<Mesh> MCylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
-		std::shared_ptr<Mesh> MHelix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
-		std::shared_ptr<Mesh> MCube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
-		std::shared_ptr<Mesh> MTorus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
-
-		meshList.push_back(MSphere);
-		meshList.push_back(MQuad);
-		meshList.push_back(MCylinder);
-		meshList.push_back(MHelix);
-		meshList.push_back(MCube);
-		meshList.push_back(MTorus);
+		std::shared_ptr<Mesh> SM_Sphere = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str());
+		std::shared_ptr<Mesh> SM_Quad = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str());
+		std::shared_ptr<Mesh> SM_Cylinder = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str());
+		std::shared_ptr<Mesh> SM_Helix = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str());
+		std::shared_ptr<Mesh> SM_Cube = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str());
+		std::shared_ptr<Mesh> SM_Torus = std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str());
+		
+		meshList.push_back(SM_Sphere);
+		meshList.push_back(SM_Quad);
+		meshList.push_back(SM_Cylinder);
+		meshList.push_back(SM_Helix);
+		meshList.push_back(SM_Cube);
+		meshList.push_back(SM_Torus);
 	}
 	
 	sky = std::make_shared<Sky>(meshList[4], samplerState);
@@ -331,6 +331,8 @@ void Game::CreateGeometry()
 	floor->GetTransform()->SetPosition(0.f, -1.f, 0.f);
 	floor->GetTransform()->SetScale(20.f, 1.f, 20.f);
 	actorList.push_back(floor);
+
+	
 }
 
 void Game::NewFrame(float deltaTime)
@@ -789,6 +791,11 @@ void Game::Update(float deltaTime, float totalTime)
 
 	ImGui::End();
 #pragma endregion
+
+	if (Input::MouseLeftPress())
+	{
+
+	}
 
 	activeCamera->Update(deltaTime);
 

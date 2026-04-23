@@ -33,6 +33,7 @@ std::shared_ptr<Material> Actor::GetMaterial() { return material; }
 
 void Actor::Draw()
 {
+	if (!visbile) { return; }
 	Graphics::Context->VSSetShader(material->GetVertexShader().Get(), 0, 0);
 	Graphics::Context->PSSetShader(material->GetPixelShader().Get(), 0, 0);
 	mesh->Draw();

@@ -1,5 +1,5 @@
 #pragma once
-#define MAX_LIGHTS 128
+#define MAX_LIGHTS 16
 
 #include <DirectXMath.h>
 #include "Lights.h"

@@ -5,7 +5,7 @@
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SPOT 2
 
-#define MAX_LIGHTS 128
+#define MAX_LIGHTS 16
 #define PI 3.14159265359
 #define MIN_ROUGHNESS 0.0000001f
 

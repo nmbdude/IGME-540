@@ -68,6 +68,8 @@ private:
 	std::shared_ptr<Sky> sky;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skySRV;
 
+	Actor selectedActor;
+
 	//New Actors
 	Actor ASphere;
 	Actor AQuad;
