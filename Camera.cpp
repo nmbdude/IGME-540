@@ -94,26 +94,26 @@ void Camera::Update(float dt)
 
 bool Camera::RaycastFromMouse(DirectX::XMFLOAT3& rayOrigin)
 {
-	// Source - https://stackoverflow.com/a/40116841
-	// Posted by Jack Reggin
-	// Retrieved 2026-04-23, License - CC BY-SA 3.0
+	//// Source - https://stackoverflow.com/a/40116841
+	//// Posted by Jack Reggin
+	//// Retrieved 2026-04-23, License - CC BY-SA 3.0
 
-	DirectX::XMVECTOR mouseNear = DirectX::XMVectorSet((float)rayOrigin.x, (float)rayOrigin.y, 0.0f, 0.0f);
-	DirectX::XMVECTOR mouseFar = DirectX::XMVectorSet((float)rayOrigin.x, (float)rayOrigin.y, 1.0f, 0.0f);
-	DirectX::XMVECTOR unprojectedNear = DirectX::XMVector3Unproject(mouseNear, 0, 0, Window::Width(), Window::Height(), a_nearZ, a_farZ,
-		a_projection, a_view, DirectX::XMMatrixIdentity());
-	DirectX::XMVECTOR unprojectedFar = DirectX::XMVector3Unproject(mouseFar, 0, 0, a_width, a_height, a_nearZ, a_farZ,
-		a_projection, a_view, DirectX::XMMatrixIdentity());
-	DirectX::XMVECTOR result = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(unprojectedFar, unprojectedNear));
-	DirectX::XMFLOAT3 direction;
-	DirectX::XMStoreFloat3(&direction, result);
-	return direction;
+	//DirectX::XMVECTOR mouseNear = DirectX::XMVectorSet((float)rayOrigin.x, (float)rayOrigin.y, 0.0f, 0.0f);
+	//DirectX::XMVECTOR mouseFar = DirectX::XMVectorSet((float)rayOrigin.x, (float)rayOrigin.y, 1.0f, 0.0f);
+	//DirectX::XMVECTOR unprojectedNear = DirectX::XMVector3Unproject(mouseNear, 0, 0, Window::Width(), Window::Height(), a_nearZ, a_farZ,
+	//	a_projection, a_view, DirectX::XMMatrixIdentity());
+	//DirectX::XMVECTOR unprojectedFar = DirectX::XMVector3Unproject(mouseFar, 0, 0, a_width, a_height, a_nearZ, a_farZ,
+	//	a_projection, a_view, DirectX::XMMatrixIdentity());
+	//DirectX::XMVECTOR result = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(unprojectedFar, unprojectedNear));
+	//DirectX::XMFLOAT3 direction;
+	//DirectX::XMStoreFloat3(&direction, result);
+	//return direction;
 
 	//Get the distance to the ground.
-	DirectX::XMFLOAT3 cameraPosition = a_camera.GetPosition();
+	//DirectX::XMFLOAT3 cameraPosition = a_camera.GetPosition();
 
-	//Get the point on the ground.
-	cameraPosition.x += direction.x * (cameraPosition.y / -direction.y);
-	cameraPosition.z += direction.z * (cameraPosition.y / -direction.y);
-
+	////Get the point on the ground.
+	//cameraPosition.x += direction.x * (cameraPosition.y / -direction.y);
+	//cameraPosition.z += direction.z * (cameraPosition.y / -direction.y);
+	return true;
 }

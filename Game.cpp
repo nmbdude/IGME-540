@@ -294,7 +294,6 @@ Game::Game()
 	rainbowMode = false;
 	rainbowSpeed = 1.0f;
 	//shaderData.colorTint = XMFLOAT4{1.f,1.f,1.f,1.f};
-	inputLayout = InputLayoutPtr{};
 	ID3DBlob* vertexShaderBlob;
 	D3DReadFileToBlob(FixPath(L"ShadowVS.cso").c_str(), &vertexShaderBlob);
 	Graphics::Device->CreateVertexShader(
@@ -304,6 +303,73 @@ Game::Game()
 		shadowVS.GetAddressOf()); // ID3D11VertexShader**
 
 	gizmo = Gizmo();
+
+	D3D11_SAMPLER_DESC ppSampDesc = {};
+	ppSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	ppSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	Graphics::Device->CreateSamplerState(&ppSampDesc, ppSampler.GetAddressOf());
+
+
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = Window::Width();
+	textureDesc.Height = Window::Height();
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> ppTexture;
+	Graphics::Device->CreateTexture2D(&textureDesc, 0, ppTexture.GetAddressOf());
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	Graphics::Device->CreateRenderTargetView(
+		ppTexture.Get(),
+		&rtvDesc,
+		ppRTV.ReleaseAndGetAddressOf());
+
+	Graphics::Device->CreateShaderResourceView(
+		ppTexture.Get(),
+		0,
+		ppSRV.ReleaseAndGetAddressOf());
+
+
+	ID3DBlob* fsVSBlob;
+	D3DReadFileToBlob(FixPath(L"PostProcessVS.cso").c_str(), &fsVSBlob);
+	Graphics::Device->CreateVertexShader(
+		fsVSBlob->GetBufferPointer(), // Pointer to start of binary data
+		fsVSBlob->GetBufferSize(), // How big is that data?
+		0, // No classes in this shader
+		ppVS.GetAddressOf()); // ID3D11VertexShader**
+
+
+	ID3DBlob* blurPSBlob;
+	D3DReadFileToBlob(FixPath(L"PostProcessPS.cso").c_str(), &blurPSBlob);
+	Graphics::Device->CreatePixelShader(
+		blurPSBlob->GetBufferPointer(), // Pointer to start of binary data
+		blurPSBlob->GetBufferSize(), // How big is that data?
+		0, // No classes in this shader
+		ppPS.GetAddressOf()); // ID3D11PixelShader**
+
+
+	ID3DBlob* bbVSBlob;
+	D3DReadFileToBlob(FixPath(L"BoxBlurPS.cso").c_str(), &bbVSBlob);
+	Graphics::Device->CreatePixelShader(
+		bbVSBlob->GetBufferPointer(), // Pointer to start of binary data
+		bbVSBlob->GetBufferSize(), // How big is that data?
+		0, // No classes in this shader
+		bbPS.GetAddressOf()); // ID3D11VertexShader**
 }
 
 
@@ -423,8 +489,8 @@ void Game::CreateRowOfGeometry(std::shared_ptr<Material> material, float y, floa
 void Game::CreateShadowMap()
 {
 	D3D11_TEXTURE2D_DESC shadowMapDesc = {};
-	shadowMapDesc.Width = shadowMapResolution;
-	shadowMapDesc.Height = shadowMapResolution;
+	shadowMapDesc.Width = (int)shadowMapResolution;
+	shadowMapDesc.Height = (int)shadowMapResolution;
 	shadowMapDesc.ArraySize = 1;
 	shadowMapDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	shadowMapDesc.CPUAccessFlags = 0;
@@ -820,6 +886,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
+	Graphics::Context->OMSetRenderTargets(1, ppRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
+
 	ShadowMapRender();
 
 	Graphics::Context->PSSetShaderResources(4, 1, shadowSRV.GetAddressOf());
@@ -864,6 +932,27 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	sky->Draw(*activeCamera.get());
+
+
+	Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
+	Graphics::Context->VSSetShader(ppVS.Get(), 0, 0);
+	Graphics::Context->PSSetShader(ppPS.Get(), 0, 0);
+
+	PostProcessingData ppPSData = {};
+	ppPSData.blurRaidus = blurRadius;
+	ppPSData.pixelHeight = 1 / Window::Height();
+	ppPSData.pixelWidth = 1 / Window::Width();
+
+	Graphics::FillAndBindNextConstantBuffer(
+		&ppPSData,
+		sizeof(PostProcessingData),
+		D3D11_PIXEL_SHADER,
+		0);
+
+
+	Graphics::Context->PSSetShaderResources(0, 1, ppSRV.GetAddressOf());
+	Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
+	Graphics::Context->Draw(3, 0);
 
 	// ImGui Render
 	{

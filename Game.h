@@ -111,5 +111,15 @@ private:
 	DirectX::XMFLOAT4X4 lightProjectionMatrix;
 	float lightProjectionSize = 20.0f;
 	float shadowMapResolution = 2048;
+
+	// Resources that are shared among all post processes
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> ppVS;
+	// Resources that are tied to a particular post process
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> ppPS;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // For rendering
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // For sampling
+	PixelShaderPtr bbPS;
+	float blurRadius = 5.f;
 };
 

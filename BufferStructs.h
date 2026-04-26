@@ -39,3 +39,10 @@ struct SkyShaderData
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;
 };
+
+struct PostProcessingData
+{
+	int blurRaidus;
+	float pixelWidth;
+	float pixelHeight;
+};
