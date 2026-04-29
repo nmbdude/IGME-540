@@ -361,15 +361,6 @@ Game::Game()
 		blurPSBlob->GetBufferSize(), // How big is that data?
 		0, // No classes in this shader
 		ppPS.GetAddressOf()); // ID3D11PixelShader**
-
-
-	ID3DBlob* bbVSBlob;
-	D3DReadFileToBlob(FixPath(L"BoxBlurPS.cso").c_str(), &bbVSBlob);
-	Graphics::Device->CreatePixelShader(
-		bbVSBlob->GetBufferPointer(), // Pointer to start of binary data
-		bbVSBlob->GetBufferSize(), // How big is that data?
-		0, // No classes in this shader
-		bbPS.GetAddressOf()); // ID3D11VertexShader**
 }
 
 
@@ -674,7 +665,11 @@ void Game::Update(float deltaTime, float totalTime)
 #pragma region UI
 	// Custom windows
 	ImGui::Begin("Details");
-	ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
+	if (ImGui::TreeNode("Shadow Map"))
+	{
+		ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
+		ImGui::TreePop();
+	}
 	if(ImGui::TreeNode("App Details"))
 	{
 		ImGui::Text("Frame Rate: %.1f FPS", ImGui::GetIO().Framerate);
@@ -852,6 +847,7 @@ void Game::Update(float deltaTime, float totalTime)
 		//ImGui::ColorEdit4("Tint Color", (float*)&shaderData.colorTint);
 		ImGui::TreePop();
 	}
+	ImGui::SliderFloat("Blur Radius", &blurRadius, 0.f, 50.f);
 	if (ImGui::Button("Toggle Demo Window"))
 	{
 		demoVisible = !demoVisible;
@@ -886,12 +882,13 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	Graphics::Context->OMSetRenderTargets(1, ppRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
-
 	ShadowMapRender();
+
+	Graphics::Context->OMSetRenderTargets(1, ppRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
 
 	Graphics::Context->PSSetShaderResources(4, 1, shadowSRV.GetAddressOf());
 	Graphics::Context->PSSetSamplers(1, 1, shadowSampler.GetAddressOf());
+
 
 	for(std::shared_ptr<Actor> actor : actorList)
 	{
@@ -933,26 +930,29 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	sky->Draw(*activeCamera.get());
 
-
 	Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
+
+	//Graphics::Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+	//Graphics::Context->IASetVertexBuffers(0, 1, 0, &size, 0);
+
 	Graphics::Context->VSSetShader(ppVS.Get(), 0, 0);
 	Graphics::Context->PSSetShader(ppPS.Get(), 0, 0);
 
-	PostProcessingData ppPSData = {};
-	ppPSData.blurRaidus = blurRadius;
-	ppPSData.pixelHeight = 1 / Window::Height();
-	ppPSData.pixelWidth = 1 / Window::Width();
+	Graphics::Context->PSSetShaderResources(0, 1, ppSRV.GetAddressOf());
+	Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
 
+	PostProcessingData ppData = {};
+	ppData.pixelWidth = 1.0 / Window::Width();
+	ppData.pixelHeight = 1.0 / Window::Height();
+	ppData.blurRadius = blurRadius;
 	Graphics::FillAndBindNextConstantBuffer(
-		&ppPSData,
+		&ppData,
 		sizeof(PostProcessingData),
 		D3D11_PIXEL_SHADER,
 		0);
-
-
-	Graphics::Context->PSSetShaderResources(0, 1, ppSRV.GetAddressOf());
-	Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
 	Graphics::Context->Draw(3, 0);
+
+
 
 	// ImGui Render
 	{

@@ -120,6 +120,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // For rendering
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // For sampling
 	PixelShaderPtr bbPS;
-	float blurRadius = 5.f;
+	float blurRadius = 2.f;
 };
 

@@ -42,7 +42,7 @@ struct SkyShaderData
 
 struct PostProcessingData
 {
-	int blurRaidus;
+	int blurRadius;
 	float pixelWidth;
 	float pixelHeight;
 };
