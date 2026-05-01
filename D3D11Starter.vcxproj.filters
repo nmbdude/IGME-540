@@ -217,11 +217,11 @@
     <FxCompile Include="SkyPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="BoxBlurPS.hlsl" />
-    <FxCompile Include="PostProcessPS.hlsl" />
-    <FxCompile Include="PostProcessVS.hlsl" />
-    <FxCompile Include="BBPS.hlsl">
+    <FxCompile Include="PostProcessPS.hlsl">
       <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PostProcessVS.hlsl">
+      <Filter>Shaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
