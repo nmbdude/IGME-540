@@ -193,7 +193,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Sky::CreateCubemap(
 	return cubeSRV;
 }
 
-void Sky::Draw(Camera camera)
+void Sky::Draw(Camera camera, SkyPSData psData)
 {
 	Graphics::Context->RSSetState(rasterizerState.Get());
 	Graphics::Context->OMSetDepthStencilState(depthStencilState.Get(), 0);
@@ -206,10 +206,17 @@ void Sky::Draw(Camera camera)
 	SkyShaderData data = {};
 	data.view = camera.GetViewMatrix();
 	data.projection = camera.GetProjectionMatrix();
+	data.world = camera.GetTransform().GetWorldMatrix();
 	Graphics::FillAndBindNextConstantBuffer(
 		&data,
 		sizeof(SkyShaderData),
 		D3D11_VERTEX_SHADER,
+		0);
+
+	Graphics::FillAndBindNextConstantBuffer(
+		&psData,
+		sizeof(SkyPSData),
+		D3D11_PIXEL_SHADER,
 		0);
 
 	mesh->Draw();

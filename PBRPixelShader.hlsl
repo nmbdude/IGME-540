@@ -17,6 +17,9 @@ cbuffer ExternalData : register(b0)
     float padding3;
     Light lights[MAX_LIGHTS];
     int lightCount;
+    float3 fogColor;
+    bool enableFog;
+    float fogDensity;
 }
 
 Texture2D Albedo : register(t0);
@@ -60,5 +63,12 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 reflectionColor = SkyTexture.Sample(Sampler, reflectionVector).rgb;
     finalColor += PBRCalculateLights(Albedo, RoughnessMap, MetalnessMap, Sampler, input, lights, lightCount, cameraPosition, input.normal, shadowAmount);
     float3 result = lerp(finalColor.rgb, reflectionColor, F_Schlick(input.normal, viewVector, 0.04f));
+    if (enableFog)
+    {
+        float distance = length(cameraPosition - input.worldPosition);
+        float fog = 1 - exp(-distance * fogDensity);
+        float3 finalResult = lerp(result, fogColor, fog);
+        return float4(pow(finalResult, 1.0 / 2.2f), 1);
+    }
     return float4(pow(result, 1.0 / 2.2f), 1);
 }

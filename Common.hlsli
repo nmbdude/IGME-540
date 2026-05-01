@@ -53,6 +53,7 @@ struct VTP_Sky
 {
     float4 position : SV_POSITION;
     float3 sampleDir : DIRECTION;
+    float3 worldPos : POSITION;
 };
 
 float SimpleFresnel(float3 n, float3 v, float f0)

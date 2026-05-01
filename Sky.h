@@ -34,7 +34,7 @@ public:
 		const wchar_t* down,
 		const wchar_t* front,
 		const wchar_t* back);
-	void Draw(Camera camera);
+	void Draw(Camera camera, SkyPSData psData);
 	static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetSkySRV();
 };
 

@@ -4,6 +4,7 @@ cbuffer ExternalData : register(b0)
 {
     matrix View;
     matrix Projection;
+    matrix world;
 };
 
 VTP_Sky main( VertexShaderInput input )
@@ -19,5 +20,6 @@ VTP_Sky main( VertexShaderInput input )
     output.position = mul(vp, float4(input.localPosition, 1.0f));
     output.position.z = output.position.w;
     output.sampleDir = input.localPosition;
+    output.worldPos = mul(world, float4(input.localPosition, 1.0f)).xyz;
     return output;
 }

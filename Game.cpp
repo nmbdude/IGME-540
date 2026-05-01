@@ -848,6 +848,9 @@ void Game::Update(float deltaTime, float totalTime)
 		ImGui::TreePop();
 	}
 	ImGui::SliderFloat("Blur Radius", &blurRadius, 0.f, 50.f);
+	ImGui::Checkbox("Enable Exponential Fog", &enableExpFog);
+	ImGui::SliderFloat("Fog Density", &fogDensity, 0.0, 1.f);
+	ImGui::ColorEdit3("Fog Color", &fogColor.x);
 	if (ImGui::Button("Toggle Demo Window"))
 	{
 		demoVisible = !demoVisible;
@@ -917,6 +920,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		psData.ambientColor = ambientColor;
 		memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
 		psData.lightCount = (int)lights.size();
+		psData.enableFog = enableExpFog;
+		psData.fogDensity = fogDensity;
+		psData.fogColor = fogColor;
 
 		Graphics::FillAndBindNextConstantBuffer(
 			&psData,
@@ -928,12 +934,15 @@ void Game::Draw(float deltaTime, float totalTime)
 		actor->Draw();
 	}
 
-	sky->Draw(*activeCamera.get());
+	SkyPSData skyPSData = {};
+	skyPSData.enableFog = enableExpFog;
+	skyPSData.fogColor = fogColor;
+	skyPSData.fogDensity = fogDensity;
+	skyPSData.cameraPosition = activeCamera->GetTransform().GetPosition();
+
+	sky->Draw(*activeCamera.get(), skyPSData);
 
 	Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
-
-	//Graphics::Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
-	//Graphics::Context->IASetVertexBuffers(0, 1, 0, &size, 0);
 
 	Graphics::Context->VSSetShader(ppVS.Get(), 0, 0);
 	Graphics::Context->PSSetShader(ppPS.Get(), 0, 0);
@@ -942,9 +951,9 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
 
 	PostProcessingData ppData = {};
-	ppData.pixelWidth = 1.0 / Window::Width();
-	ppData.pixelHeight = 1.0 / Window::Height();
-	ppData.blurRadius = blurRadius;
+	ppData.pixelWidth = 1.0f / Window::Width();
+	ppData.pixelHeight = 1.0f / Window::Height();
+	ppData.blurRadius = (int)blurRadius;
 	Graphics::FillAndBindNextConstantBuffer(
 		&ppData,
 		sizeof(PostProcessingData),

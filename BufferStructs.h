@@ -32,12 +32,24 @@ struct PixelShaderData
 	float padding3;
 	Light lights[MAX_LIGHTS];
 	int lightCount;
+	DirectX::XMFLOAT3 fogColor;
+	bool enableFog;
+	float fogDensity;
 };
 
 struct SkyShaderData
 {
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;
+	DirectX::XMFLOAT4X4 world;
+};
+
+struct SkyPSData
+{
+	DirectX::XMFLOAT3 fogColor;
+	bool enableFog;
+	float fogDensity;
+	DirectX::XMFLOAT3 cameraPosition;
 };
 
 struct PostProcessingData

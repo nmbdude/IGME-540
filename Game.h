@@ -120,6 +120,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // For rendering
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // For sampling
 	PixelShaderPtr bbPS;
-	float blurRadius = 2.f;
+	float blurRadius = 0.f;
+	bool enableExpFog = false;
+	float fogDensity = 1.0f;
+	XMFLOAT3 fogColor = { 0.5f, 0.5f, 0.5f };
 };
 
